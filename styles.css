@@ -1,0 +1,354 @@
+:root {
+  --primary: #166534;
+  --primary-foreground: #ffffff;
+  --secondary: #15803d;
+  --accent: #22c55e;
+  --background: #ffffff;
+  --foreground: #374151;
+  --card: #f0fdf4;
+  --muted: #f0fdf4;
+  --border: #e5e7eb;
+}
+
+.font-playfair {
+  font-family: "Playfair Display", serif;
+}
+.font-source {
+  font-family: "Source Sans Pro", sans-serif;
+}
+
+.hero-bg {
+  background: linear-gradient(135deg, rgba(22, 101, 52, 0.9), rgba(21, 128, 61, 0.8)),
+    url("https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80")
+    center / cover;
+}
+
+/* Enhanced animations and transitions */
+.animate-fade-in {
+  animation: fadeIn 1.2s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s ease-out forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.8s ease-out forwards;
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.8s ease-out forwards;
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s ease-out forwards;
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.animate-bounce-in {
+  animation: bounceIn 1s ease-out forwards;
+  opacity: 0;
+  transform: scale(0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Enhanced hover effects and transitions */
+.service-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.service-card:hover::before {
+  left: 100%;
+}
+
+.service-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+.service-card i {
+  transition: all 0.3s ease;
+}
+
+.service-card:hover i {
+  transform: scale(1.2) rotate(5deg);
+}
+
+/* Enhanced navigation with backdrop blur and smooth transitions */
+nav {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+nav a {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+nav a::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 50%;
+  background-color: #166534;
+  transition: all 0.3s ease;
+}
+
+nav a:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+/* Enhanced button animations */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Floating animation for language switcher */
+.language-switcher {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.language-switcher button {
+  transition: all 0.3s ease;
+}
+
+.language-switcher button:hover {
+  transform: scale(1.1);
+}
+
+/* Enhanced calendar animations */
+#calendar-days > div {
+  transition: all 0.2s ease;
+}
+
+#calendar-days > div:hover:not(.text-gray-300):not(.text-gray-400) {
+  transform: scale(1.1);
+  background-color: #dcfce7;
+}
+
+#time-slots-grid button {
+  transition: all 0.3s ease;
+}
+
+#time-slots-grid button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Pulse animation for statistics */
+.stat-number {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Enhanced form focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(22, 101, 52, 0.1);
+}
+
+/* Loading animation for form submission */
+.loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Parallax effect for hero section */
+.hero-bg {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Smooth reveal animations for sections */
+.section-reveal {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.8s ease;
+}
+
+.section-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hidden-lang {
+  display: none;
+}
+
+/* Enhanced mobile responsiveness */
+@media (max-width: 768px) {
+  .hero-bg {
+    background-attachment: scroll;
+  }
+
+  .service-card:hover {
+    transform: translateY(-4px) scale(1.01);
+  }
+}
