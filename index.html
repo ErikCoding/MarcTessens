@@ -9,23 +9,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     
-    <!-- Added Firebase SDK -->
+    <!-- Updated Firebase SDK to latest version and added proper configuration -->
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         // Your web app's Firebase configuration
         // UWAGA: Zastąp te wartości swoimi danymi z Firebase Console
         const firebaseConfig = {
-  apiKey: "AIzaSyBFPLvEIK5B48Ldm44bMjGPVyCPbOfrANg",
-  authDomain: "marc-tessens.firebaseapp.com",
-  databaseURL: "https://marc-tessens-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "marc-tessens",
-  storageBucket: "marc-tessens.firebasestorage.app",
-  messagingSenderId: "121454227452",
-  appId: "1:121454227452:web:a2756542378505f8a08c79"
-};
+            apiKey: "TWOJ_API_KEY",
+            authDomain: "TWOJ_PROJECT_ID.firebaseapp.com",
+            projectId: "TWOJ_PROJECT_ID",
+            storageBucket: "TWOJ_PROJECT_ID.appspot.com",
+            messagingSenderId: "TWOJ_SENDER_ID",
+            appId: "TWOJ_APP_ID"
+        };
         
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -34,6 +33,17 @@
         // Make Firebase available globally
         window.firebaseApp = app;
         window.firebaseDb = db;
+        window.firebaseCollection = collection;
+        window.firebaseAddDoc = addDoc;
+        window.firebaseGetDocs = getDocs;
+        window.firebaseQuery = query;
+        window.firebaseWhere = where;
+        window.firebaseDeleteDoc = deleteDoc;
+        window.firebaseDoc = doc;
+        window.firebaseUpdateDoc = updateDoc;
+        window.firebaseOrderBy = orderBy;
+        
+        console.log("[v0] Firebase initialized successfully");
     </script>
 </head>
 <body class="font-source bg-white text-gray-700">
@@ -348,7 +358,6 @@
                 <p data-nl="Bedankt voor uw boeking." data-en="Thank you for your booking.">
                     Bedankt voor uw boeking.
                 </p>
-                <!-- Added cancel appointment option -->
                 <div class="mt-4 pt-4 border-t border-green-200">
                     <p class="text-sm text-green-600 mb-3" data-nl="Wilt u uw afspraak annuleren?" data-en="Would you like to cancel your appointment?">
                         Wilt u uw afspraak annuleren?
@@ -359,7 +368,6 @@
                 </div>
             </div>
             
-            <!-- Added cancellation form -->
             <div id="cancel-form" class="hidden mt-8 bg-red-50 border border-red-200 p-6 rounded-lg">
                 <h3 class="font-semibold text-lg text-red-800 mb-4" data-nl="Afspraak Annuleren" data-en="Cancel Appointment">
                     Afspraak Annuleren
@@ -388,7 +396,6 @@
                 </form>
             </div>
             
-            <!-- Added cancellation success message -->
             <div id="cancel-success" class="hidden mt-8 bg-yellow-100 border border-yellow-400 text-yellow-800 px-6 py-4 rounded-lg text-center">
                 <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
                 <h3 class="font-semibold text-lg mb-2" data-nl="Afspraak geannuleerd" data-en="Appointment cancelled">

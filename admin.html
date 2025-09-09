@@ -7,33 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <!-- Added Firebase SDK for admin panel -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        
-        // Your web app's Firebase configuration
-        // UWAGA: Zastąp te wartości swoimi danymi z Firebase Console
-        const firebaseConfig = {
-  apiKey: "AIzaSyBFPLvEIK5B48Ldm44bMjGPVyCPbOfrANg",
-  authDomain: "marc-tessens.firebaseapp.com",
-  databaseURL: "https://marc-tessens-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "marc-tessens",
-  storageBucket: "marc-tessens.firebasestorage.app",
-  messagingSenderId: "121454227452",
-  appId: "1:121454227452:web:a2756542378505f8a08c79"
-};
-        
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        // Make Firebase available globally
-        window.firebaseApp = app;
-        window.firebaseDb = db;
-    </script>
-    
     <style>
         :root {
             --primary: #166534;
@@ -82,6 +55,34 @@
             color: #92400e;
         }
     </style>
+    
+    <!-- Added Firebase SDK for admin panel -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        // Your web app's Firebase configuration
+        // UWAGA: Zastąp te wartości swoimi danymi z Firebase Console
+        const firebaseConfig = {
+            apiKey: "TWOJ_API_KEY",
+            authDomain: "TWOJ_PROJECT_ID.firebaseapp.com",
+            projectId: "TWOJ_PROJECT_ID",
+            storageBucket: "TWOJ_PROJECT_ID.appspot.com",
+            messagingSenderId: "TWOJ_SENDER_ID",
+            appId: "TWOJ_APP_ID"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make Firebase available globally
+        window.firebaseApp = app;
+        window.firebaseDb = db;
+        
+        console.log("[v0] Firebase initialized for admin panel");
+    </script>
 </head>
 <body class="font-source bg-gray-50 text-gray-700">
     <!-- Added loading overlay for Firebase operations -->
@@ -191,7 +192,6 @@
                     </div>
                 </div>
                 
-                <!-- Added messages card -->
                 <div class="admin-card bg-white p-6 rounded-lg shadow">
                     <div class="flex items-center">
                         <div class="p-3 bg-purple-100 rounded-lg">
@@ -205,7 +205,6 @@
                 </div>
             </div>
 
-            <!-- Added navigation tabs -->
             <div class="bg-white rounded-lg shadow mb-8">
                 <div class="border-b border-gray-200">
                     <nav class="-mb-px flex">
@@ -246,7 +245,6 @@
                             </select>
                         </div>
                         
-                        <!-- Added message type filter -->
                         <div id="messages-filters" class="hidden">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Filter op Type</label>
                             <select id="message-type-filter" onchange="filterMessages()" 
@@ -270,7 +268,6 @@
                 </div>
             </div>
 
-            <!-- Added content containers for tabs -->
             <div id="bookings-content" class="tab-content">
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200">
@@ -318,7 +315,6 @@
                 </div>
             </div>
 
-            <!-- Added messages content -->
             <div id="messages-content" class="tab-content hidden">
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200">
@@ -412,19 +408,19 @@
         function initializeFirebase() {
             if (window.firebaseDb) {
                 datb = window.firebaseDb;
-                console.log("Firebase initialized successfully");
+                console.log("[v0] Firebase initialized for admin panel");
                 return true;
             }
-            console.error("Firebase not initialized");
+            console.error("[v0] Firebase not initialized for admin panel");
             return false;
         }
 
         function showLoading() {
-            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById("loading-overlay").classList.remove("hidden");
         }
 
         function hideLoading() {
-            document.getElementById('loading-overlay').classList.add('hidden');
+            document.getElementById("loading-overlay").classList.add("hidden");
         }
 
         async function loadBookingsFromFirebase() {
@@ -434,15 +430,16 @@
                 const bookings = [];
                 
                 querySnapshot.forEach((doc) => {
+                    const data = doc.data();
                     bookings.push({
                         id: doc.id,
-                        ...doc.data()
+                        ...data
                     });
                 });
                 
                 return bookings;
             } catch (error) {
-                console.error("Error loading bookings: ", error);
+                console.error("[v0] Error loading bookings:", error);
                 return [];
             } finally {
                 hideLoading();
@@ -456,15 +453,16 @@
                 const messages = [];
                 
                 querySnapshot.forEach((doc) => {
+                    const data = doc.data();
                     messages.push({
                         id: doc.id,
-                        ...doc.data()
+                        ...data
                     });
                 });
                 
                 return messages;
             } catch (error) {
-                console.error("Error loading messages: ", error);
+                console.error("[v0] Error loading messages:", error);
                 return [];
             } finally {
                 hideLoading();
@@ -475,10 +473,10 @@
             try {
                 showLoading();
                 await deleteDoc(doc(db, "bookings", bookingId));
-                console.log("Booking deleted successfully");
+                return true;
             } catch (error) {
-                console.error("Error deleting booking: ", error);
-                throw error;
+                console.error("[v0] Error deleting booking:", error);
+                return false;
             } finally {
                 hideLoading();
             }
@@ -488,42 +486,16 @@
             try {
                 showLoading();
                 await deleteDoc(doc(db, "messages", messageId));
-                console.log("Message deleted successfully");
+                return true;
             } catch (error) {
-                console.error("Error deleting message: ", error);
-                throw error;
+                console.error("[v0] Error deleting message:", error);
+                return false;
             } finally {
                 hideLoading();
             }
         }
 
-        async function deleteAllBookingsFromFirebase() {
-            try {
-                showLoading();
-                const bookingsSnapshot = await getDocs(collection(db, "bookings"));
-                const messagesSnapshot = await getDocs(collection(db, "messages"));
-                
-                const deletePromises = [];
-                
-                bookingsSnapshot.forEach((doc) => {
-                    deletePromises.push(deleteDoc(doc.ref));
-                });
-                
-                messagesSnapshot.forEach((doc) => {
-                    deletePromises.push(deleteDoc(doc.ref));
-                });
-                
-                await Promise.all(deletePromises);
-                console.log("All data deleted successfully");
-            } catch (error) {
-                console.error("Error deleting all data: ", error);
-                throw error;
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function adminLogin(event) {
+        window.adminLogin = function(event) {
             event.preventDefault();
             const password = document.getElementById('admin-password').value;
             
@@ -538,7 +510,7 @@
             }
         }
 
-        function adminLogout() {
+        window.adminLogout = function() {
             isLoggedIn = false;
             document.getElementById('admin-dashboard').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
@@ -546,25 +518,32 @@
             document.getElementById('login-error').classList.add('hidden');
         }
 
-        async function loadDashboard() {
-            try {
-                // Load bookings and messages from Firebase
-                allBookings = await loadBookingsFromFirebase();
-                filteredBookings = [...allBookings];
-                
-                allMessages = await loadMessagesFromFirebase();
-                filteredMessages = [...allMessages];
-                
-                updateStats();
-                renderBookingsTable();
-                renderMessagesTable();
-            } catch (error) {
-                console.error("Error loading dashboard:", error);
-                alert("Fout bij het laden van gegevens. Probeer de pagina te vernieuwen.");
+        window.loadDashboard = async function() {
+            // Wait for Firebase to be available
+            let attempts = 0;
+            while (!window.firebaseDb && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
             }
+
+            if (!initializeFirebase()) {
+                alert('Fout bij het laden van Firebase. Probeer de pagina te vernieuwen.');
+                return;
+            }
+
+            // Load data from Firebase
+            allBookings = await loadBookingsFromFirebase();
+            filteredBookings = [...allBookings];
+            
+            allMessages = await loadMessagesFromFirebase();
+            filteredMessages = [...allMessages];
+            
+            updateStats();
+            renderBookingsTable();
+            renderMessagesTable();
         }
 
-        function updateStats() {
+        window.updateStats = function() {
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -587,7 +566,7 @@
             document.getElementById('total-messages').textContent = totalMessages;
         }
 
-        function renderBookingsTable() {
+        window.renderBookingsTable = function() {
             const tbody = document.getElementById('bookings-table-body');
             const noBookings = document.getElementById('no-bookings');
             
@@ -674,7 +653,7 @@
             }).join('');
         }
 
-        function formatDate(dateString) {
+        window.formatDate = function(dateString) {
             const date = new Date(dateString);
             const options = { 
                 weekday: 'short', 
@@ -685,7 +664,7 @@
             return date.toLocaleDateString('nl-NL', options);
         }
 
-        function filterBookings() {
+        window.filterBookings = function() {
             const statusFilter = document.getElementById('status-filter').value;
             const typeFilter = document.getElementById('type-filter').value;
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
@@ -721,7 +700,7 @@
             renderBookingsTable();
         }
 
-        function viewBookingDetails(bookingId) {
+        window.viewBookingDetails = function(bookingId) {
             const booking = allBookings.find(b => b.id === bookingId);
             if (!booking) return;
             
@@ -775,25 +754,27 @@
             document.getElementById('booking-modal').classList.remove('hidden');
         }
 
-        function closeBookingModal() {
+        window.closeBookingModal = function() {
             document.getElementById('booking-modal').classList.add('hidden');
         }
 
-        async function deleteBooking(bookingId) {
+        window.deleteBooking = async function(bookingId) {
             if (!confirm('Weet u zeker dat u deze afspraak wilt verwijderen?')) {
                 return;
             }
             
-            try {
-                await deleteBookingFromFirebase(bookingId);
-                await loadDashboard(); // Reload data
-            } catch (error) {
-                console.error("Error deleting booking:", error);
-                alert("Fout bij het verwijderen van de afspraak. Probeer het opnieuw.");
+            const success = await deleteBookingFromFirebase(bookingId);
+            
+            if (success) {
+                // Remove from local arrays
+                allBookings = allBookings.filter(b => b.id !== bookingId);
+                loadDashboard();
+            } else {
+                alert('Fout bij het verwijderen van de afspraak. Probeer het opnieuw.');
             }
         }
 
-        function showTab(tabName) {
+        window.showTab = function(tabName) {
             currentTab = tabName;
             
             // Update tab buttons
@@ -823,7 +804,7 @@
             }
         }
 
-        function renderMessagesTable() {
+        window.renderMessagesTable = function() {
             const tbody = document.getElementById('messages-table-body');
             const noMessages = document.getElementById('no-messages');
             
@@ -910,7 +891,7 @@
             }).join('');
         }
 
-        function filterMessages() {
+        window.filterMessages = function() {
             const typeFilter = document.getElementById('message-type-filter').value;
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
             
@@ -940,7 +921,7 @@
             renderMessagesTable();
         }
 
-        function performSearch() {
+        window.performSearch = function() {
             if (currentTab === 'bookings') {
                 filterBookings();
             } else {
@@ -948,7 +929,7 @@
             }
         }
 
-        function viewMessageDetails(messageId) {
+        window.viewMessageDetails = function(messageId) {
             const message = allMessages.find(m => m.id === messageId);
             if (!message) return;
             
@@ -1016,22 +997,23 @@
             document.getElementById('booking-modal').classList.remove('hidden');
         }
 
-        async function deleteMessage(messageId) {
+        window.deleteMessage = async function(messageId) {
             if (!confirm('Weet u zeker dat u dit bericht wilt verwijderen?')) {
                 return;
             }
             
-            try {
-                await deleteMessageFromFirebase(messageId);
-                await loadDashboard(); // Reload data
-            } catch (error) {
-                console.error("Error deleting message:", error);
-                alert("Fout bij het verwijderen van het bericht. Probeer het opnieuw.");
+            const success = await deleteMessageFromFirebase(messageId);
+            
+            if (success) {
+                allMessages = allMessages.filter(m => m.id !== messageId);
+                loadDashboard();
+            } else {
+                alert('Fout bij het verwijderen van het bericht. Probeer het opnieuw.');
             }
         }
 
-        async function refreshDashboard() {
-            await loadDashboard();
+        window.refreshDashboard = function() {
+            loadDashboard();
             // Reset filters
             document.getElementById('status-filter').value = 'all';
             document.getElementById('type-filter').value = 'all';
@@ -1039,7 +1021,7 @@
             document.getElementById('search-input').value = '';
         }
 
-        function exportBookings() {
+        window.exportBookings = function() {
             if (allBookings.length === 0) {
                 alert('Geen afspraken om te exporteren.');
                 return;
@@ -1070,7 +1052,7 @@
             document.body.removeChild(link);
         }
 
-        async function resetAllBookings() {
+        window.resetAllBookings = async function() {
             if (!confirm('Weet u zeker dat u ALLE afspraken en berichten wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
                 return;
             }
@@ -1080,7 +1062,17 @@
             }
             
             try {
-                await deleteAllBookingsFromFirebase();
+                showLoading();
+                
+                // Delete all bookings
+                for (const booking of allBookings) {
+                    await deleteDoc(doc(db, "bookings", booking.id));
+                }
+                
+                // Delete all messages
+                for (const message of allMessages) {
+                    await deleteDoc(doc(db, "messages", message.id));
+                }
                 
                 // Reset arrays
                 allBookings = [];
@@ -1089,14 +1081,14 @@
                 filteredMessages = [];
                 
                 // Refresh dashboard
-                updateStats();
-                renderBookingsTable();
-                renderMessagesTable();
+                loadDashboard();
                 
                 alert('Alle gegevens zijn verwijderd.');
             } catch (error) {
-                console.error("Error resetting all data:", error);
-                alert("Fout bij het verwijderen van alle gegevens. Probeer het opnieuw.");
+                console.error("[v0] Error resetting data:", error);
+                alert('Fout bij het verwijderen van gegevens. Probeer het opnieuw.');
+            } finally {
+                hideLoading();
             }
         }
 
@@ -1107,35 +1099,11 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Wait for Firebase to be available
-            let attempts = 0;
-            while (!window.firebaseDb && attempts < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
-            }
-            
-            if (!initializeFirebase()) {
-                alert("Fout bij het laden van Firebase. Controleer uw internetverbinding en probeer opnieuw.");
-            }
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-login for demo purposes - remove in production
+            // adminLogin({ preventDefault: () => {} });
         });
-
-        // Make functions available globally
-        window.adminLogin = adminLogin;
-        window.adminLogout = adminLogout;
-        window.loadDashboard = loadDashboard;
-        window.filterBookings = filterBookings;
-        window.viewBookingDetails = viewBookingDetails;
-        window.closeBookingModal = closeBookingModal;
-        window.deleteBooking = deleteBooking;
-        window.showTab = showTab;
-        window.filterMessages = filterMessages;
-        window.performSearch = performSearch;
-        window.viewMessageDetails = viewMessageDetails;
-        window.deleteMessage = deleteMessage;
-        window.refreshDashboard = refreshDashboard;
-        window.exportBookings = exportBookings;
-        window.resetAllBookings = resetAllBookings;
     </script>
 </body>
 </html>

@@ -1,23 +1,13 @@
-import {
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  deleteDoc,
-  query,
-  where,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
-
 let currentLanguage = localStorage.getItem("preferred-language") || "nl"
 let db = null
 
 function initializeFirebase() {
   if (window.firebaseDb) {
     db = window.firebaseDb
-    console.log("Firebase initialized successfully")
+    console.log("[v0] Firebase initialized successfully")
     return true
   }
-  console.error("Firebase not initialized")
+  console.error("[v0] Firebase not initialized")
   return false
 }
 
@@ -32,11 +22,11 @@ function hideLoading() {
 async function saveBooking(bookingData) {
   try {
     showLoading()
-    const docRef = await addDoc(collection(db, "bookings"), bookingData)
-    console.log("Booking saved with ID: ", docRef.id)
+    const docRef = await window.firebaseAddDoc(window.firebaseCollection(db, "bookings"), bookingData)
+    console.log("[v0] Booking saved with ID: ", docRef.id)
     return docRef.id
   } catch (error) {
-    console.error("Error saving booking: ", error)
+    console.error("[v0] Error saving booking: ", error)
     throw error
   } finally {
     hideLoading()
@@ -46,11 +36,11 @@ async function saveBooking(bookingData) {
 async function saveMessage(messageData) {
   try {
     showLoading()
-    const docRef = await addDoc(collection(db, "messages"), messageData)
-    console.log("Message saved with ID: ", docRef.id)
+    const docRef = await window.firebaseAddDoc(window.firebaseCollection(db, "messages"), messageData)
+    console.log("[v0] Message saved with ID: ", docRef.id)
     return docRef.id
   } catch (error) {
-    console.error("Error saving message: ", error)
+    console.error("[v0] Error saving message: ", error)
     throw error
   } finally {
     hideLoading()
@@ -59,7 +49,7 @@ async function saveMessage(messageData) {
 
 async function getBookedSlots() {
   try {
-    const querySnapshot = await getDocs(collection(db, "bookings"))
+    const querySnapshot = await window.firebaseGetDocs(window.firebaseCollection(db, "bookings"))
     const bookedSlots = {}
 
     querySnapshot.forEach((doc) => {
@@ -73,7 +63,7 @@ async function getBookedSlots() {
 
     return bookedSlots
   } catch (error) {
-    console.error("Error getting booked slots: ", error)
+    console.error("[v0] Error getting booked slots: ", error)
     return {}
   }
 }
@@ -81,8 +71,11 @@ async function getBookedSlots() {
 async function cancelBookingByEmail(email, reason) {
   try {
     showLoading()
-    const q = query(collection(db, "bookings"), where("email", "==", email))
-    const querySnapshot = await getDocs(q)
+    const q = window.firebaseQuery(
+      window.firebaseCollection(db, "bookings"),
+      window.firebaseWhere("email", "==", email),
+    )
+    const querySnapshot = await window.firebaseGetDocs(q)
 
     if (!querySnapshot.empty) {
       const bookingDoc = querySnapshot.docs[0]
@@ -100,13 +93,13 @@ async function cancelBookingByEmail(email, reason) {
       await saveMessage(cancellation)
 
       // Delete the booking
-      await deleteDoc(doc(db, "bookings", bookingDoc.id))
+      await window.firebaseDeleteDoc(window.firebaseDoc(db, "bookings", bookingDoc.id))
 
       return true
     }
     return false
   } catch (error) {
-    console.error("Error cancelling booking: ", error)
+    console.error("[v0] Error cancelling booking: ", error)
     throw error
   } finally {
     hideLoading()
@@ -138,16 +131,28 @@ const timeSlots = [
 ]
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Wait for Firebase to be available
+  console.log("[v0] DOM loaded, initializing application...")
+
+  // Wait for Firebase to be available with timeout
   let attempts = 0
-  while (!window.firebaseDb && attempts < 50) {
+  const maxAttempts = 100
+
+  while (!window.firebaseDb && attempts < maxAttempts) {
     await new Promise((resolve) => setTimeout(resolve, 100))
     attempts++
   }
 
+  if (attempts >= maxAttempts) {
+    console.error("[v0] Firebase initialization timeout")
+    alert("Fout bij het laden van de applicatie. Controleer uw internetverbinding en vernieuw de pagina.")
+    return
+  }
+
   if (initializeFirebase()) {
+    console.log("[v0] Starting application initialization...")
     switchLanguage(currentLanguage)
     await generateCalendar()
+    console.log("[v0] Application initialized successfully")
   } else {
     alert("Fout bij het laden van de applicatie. Probeer de pagina te vernieuwen.")
   }
@@ -204,7 +209,15 @@ function toggleMobileMenu() {
 }
 
 async function generateCalendar() {
-  bookedSlots = await getBookedSlots()
+  console.log("[v0] Generating calendar...")
+
+  try {
+    bookedSlots = await getBookedSlots()
+    console.log("[v0] Loaded booked slots:", bookedSlots)
+  } catch (error) {
+    console.error("[v0] Error loading booked slots:", error)
+    bookedSlots = {}
+  }
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -241,10 +254,18 @@ async function generateCalendar() {
           "December",
         ]
 
-  document.getElementById("calendar-month-year").textContent = `${monthNames[month]} ${year}`
+  const monthYearElement = document.getElementById("calendar-month-year")
+  if (monthYearElement) {
+    monthYearElement.textContent = `${monthNames[month]} ${year}`
+  }
 
   // Clear previous calendar
   const calendarDays = document.getElementById("calendar-days")
+  if (!calendarDays) {
+    console.error("[v0] Calendar days element not found")
+    return
+  }
+
   calendarDays.innerHTML = ""
 
   // Get first day of month and number of days
@@ -278,6 +299,8 @@ async function generateCalendar() {
 
     calendarDays.appendChild(dayElement)
   }
+
+  console.log("[v0] Calendar generated successfully")
 }
 
 function previousMonth() {
@@ -476,7 +499,7 @@ async function submitBooking(event) {
       document.getElementById("booking-success").scrollIntoView({ behavior: "smooth" })
     }, 400)
   } catch (error) {
-    console.error("Error submitting booking:", error)
+    console.error("[v0] Error submitting booking:", error)
     alert(
       currentLanguage === "nl"
         ? "Er is een fout opgetreden bij het opslaan van uw afspraak. Probeer het opnieuw."
@@ -533,7 +556,7 @@ async function handleContactForm(event) {
       }, 5000)
     }
   } catch (error) {
-    console.error("Error submitting contact form:", error)
+    console.error("[v0] Error submitting contact form:", error)
     alert(
       currentLanguage === "nl"
         ? "Er is een fout opgetreden bij het verzenden van uw bericht. Probeer het opnieuw."
@@ -584,7 +607,7 @@ async function cancelAppointment(event) {
       )
     }
   } catch (error) {
-    console.error("Error cancelling appointment:", error)
+    console.error("[v0] Error cancelling appointment:", error)
     alert(
       currentLanguage === "nl"
         ? "Er is een fout opgetreden bij het annuleren van uw afspraak. Probeer het opnieuw."
