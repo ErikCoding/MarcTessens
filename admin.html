@@ -7,30 +7,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Added Firebase SDK for admin panel -->
     <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyAang2D_CfhYjvijB6FW6tXshxl-lyjUcM",
-    authDomain: "marc-tessens-app.firebaseapp.com",
-    databaseURL: "https://marc-tessens-app-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "marc-tessens-app",
-    storageBucket: "marc-tessens-app.firebasestorage.app",
-    messagingSenderId: "786694931112",
-    appId: "1:786694931112:web:ae6071e1bc3daf3463389d",
-    measurementId: "G-ZTTEV5P2V4"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        // Your web app's Firebase configuration
+        // UWAGA: Zastąp te wartości swoimi danymi z Firebase Console
+        const firebaseConfig = {
+  apiKey: "AIzaSyBFPLvEIK5B48Ldm44bMjGPVyCPbOfrANg",
+  authDomain: "marc-tessens.firebaseapp.com",
+  databaseURL: "https://marc-tessens-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "marc-tessens",
+  storageBucket: "marc-tessens.firebasestorage.app",
+  messagingSenderId: "121454227452",
+  appId: "1:121454227452:web:a2756542378505f8a08c79"
+};
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make Firebase available globally
+        window.firebaseApp = app;
+        window.firebaseDb = db;
+    </script>
+    
     <style>
         :root {
             --primary: #166534;
@@ -81,6 +84,14 @@
     </style>
 </head>
 <body class="font-source bg-gray-50 text-gray-700">
+    <!-- Added loading overlay for Firebase operations -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-800 mx-auto mb-4"></div>
+            <p class="text-gray-700">Bezig met laden...</p>
+        </div>
+    </div>
+
     <div id="login-screen" class="min-h-screen flex items-center justify-center bg-green-50">
         <div class="max-w-md w-full mx-4">
             <div class="bg-white p-8 rounded-lg shadow-lg">
@@ -376,7 +387,18 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { 
+            collection, 
+            getDocs, 
+            doc, 
+            deleteDoc, 
+            query, 
+            where, 
+            orderBy,
+            onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
         // Admin authentication
         const ADMIN_PASSWORD = 'admin123'; // In production, this should be more secure
         let isLoggedIn = false;
@@ -385,6 +407,121 @@
         let allMessages = [];
         let filteredMessages = [];
         let currentTab = 'bookings';
+        let datb = null;
+
+        function initializeFirebase() {
+            if (window.firebaseDb) {
+                datb = window.firebaseDb;
+                console.log("Firebase initialized successfully");
+                return true;
+            }
+            console.error("Firebase not initialized");
+            return false;
+        }
+
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        async function loadBookingsFromFirebase() {
+            try {
+                showLoading();
+                const querySnapshot = await getDocs(collection(db, "bookings"));
+                const bookings = [];
+                
+                querySnapshot.forEach((doc) => {
+                    bookings.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                return bookings;
+            } catch (error) {
+                console.error("Error loading bookings: ", error);
+                return [];
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function loadMessagesFromFirebase() {
+            try {
+                showLoading();
+                const querySnapshot = await getDocs(collection(db, "messages"));
+                const messages = [];
+                
+                querySnapshot.forEach((doc) => {
+                    messages.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                return messages;
+            } catch (error) {
+                console.error("Error loading messages: ", error);
+                return [];
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteBookingFromFirebase(bookingId) {
+            try {
+                showLoading();
+                await deleteDoc(doc(db, "bookings", bookingId));
+                console.log("Booking deleted successfully");
+            } catch (error) {
+                console.error("Error deleting booking: ", error);
+                throw error;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteMessageFromFirebase(messageId) {
+            try {
+                showLoading();
+                await deleteDoc(doc(db, "messages", messageId));
+                console.log("Message deleted successfully");
+            } catch (error) {
+                console.error("Error deleting message: ", error);
+                throw error;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteAllBookingsFromFirebase() {
+            try {
+                showLoading();
+                const bookingsSnapshot = await getDocs(collection(db, "bookings"));
+                const messagesSnapshot = await getDocs(collection(db, "messages"));
+                
+                const deletePromises = [];
+                
+                bookingsSnapshot.forEach((doc) => {
+                    deletePromises.push(deleteDoc(doc.ref));
+                });
+                
+                messagesSnapshot.forEach((doc) => {
+                    deletePromises.push(deleteDoc(doc.ref));
+                });
+                
+                await Promise.all(deletePromises);
+                console.log("All data deleted successfully");
+            } catch (error) {
+                console.error("Error deleting all data: ", error);
+                throw error;
+            } finally {
+                hideLoading();
+            }
+        }
 
         function adminLogin(event) {
             event.preventDefault();
@@ -409,26 +546,27 @@
             document.getElementById('login-error').classList.add('hidden');
         }
 
-        function loadDashboard() {
-            // Load bookings from localStorage
-            allBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-            filteredBookings = [...allBookings];
-            
-            allMessages = JSON.parse(localStorage.getItem('messages') || '[]');
-            filteredMessages = [...allMessages];
-            
-            updateStats();
-            renderBookingsTable();
-            renderMessagesTable();
+        async function loadDashboard() {
+            try {
+                // Load bookings and messages from Firebase
+                allBookings = await loadBookingsFromFirebase();
+                filteredBookings = [...allBookings];
+                
+                allMessages = await loadMessagesFromFirebase();
+                filteredMessages = [...allMessages];
+                
+                updateStats();
+                renderBookingsTable();
+                renderMessagesTable();
+            } catch (error) {
+                console.error("Error loading dashboard:", error);
+                alert("Fout bij het laden van gegevens. Probeer de pagina te vernieuwen.");
+            }
         }
 
         function updateStats() {
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const weekStart = new Date(today);
-            weekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekStart.getDate() + 6); // Sunday
 
             const totalBookings = allBookings.length;
             const upcomingBookings = allBookings.filter(booking => {
@@ -522,11 +660,11 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button onclick="viewBookingDetails(${booking.id})" 
+                            <button onclick="viewBookingDetails('${booking.id}')" 
                                     class="text-green-700 hover:text-green-900 mr-3">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="deleteBooking(${booking.id})" 
+                            <button onclick="deleteBooking('${booking.id}')" 
                                     class="text-red-600 hover:text-red-900">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -641,30 +779,18 @@
             document.getElementById('booking-modal').classList.add('hidden');
         }
 
-        function deleteBooking(bookingId) {
+        async function deleteBooking(bookingId) {
             if (!confirm('Weet u zeker dat u deze afspraak wilt verwijderen?')) {
                 return;
             }
             
-            const booking = allBookings.find(b => b.id === bookingId);
-            
-            // Remove from bookings array
-            allBookings = allBookings.filter(b => b.id !== bookingId);
-            localStorage.setItem('bookings', JSON.stringify(allBookings));
-            
-            // Remove from booked slots to make time slot available again
-            if (booking) {
-                const bookedSlots = JSON.parse(localStorage.getItem('bookedSlots') || '{}');
-                if (bookedSlots[booking.date]) {
-                    bookedSlots[booking.date] = bookedSlots[booking.date].filter(time => time !== booking.time);
-                    if (bookedSlots[booking.date].length === 0) {
-                        delete bookedSlots[booking.date];
-                    }
-                    localStorage.setItem('bookedSlots', JSON.stringify(bookedSlots));
-                }
+            try {
+                await deleteBookingFromFirebase(bookingId);
+                await loadDashboard(); // Reload data
+            } catch (error) {
+                console.error("Error deleting booking:", error);
+                alert("Fout bij het verwijderen van de afspraak. Probeer het opnieuw.");
             }
-            
-            loadDashboard();
         }
 
         function showTab(tabName) {
@@ -770,11 +896,11 @@
                             <div class="text-sm text-gray-900 max-w-xs truncate">${content}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button onclick="viewMessageDetails(${message.id})" 
+                            <button onclick="viewMessageDetails('${message.id}')" 
                                     class="text-green-700 hover:text-green-900 mr-3">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="deleteMessage(${message.id})" 
+                            <button onclick="deleteMessage('${message.id}')" 
                                     class="text-red-600 hover:text-red-900">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -890,19 +1016,22 @@
             document.getElementById('booking-modal').classList.remove('hidden');
         }
 
-        function deleteMessage(messageId) {
+        async function deleteMessage(messageId) {
             if (!confirm('Weet u zeker dat u dit bericht wilt verwijderen?')) {
                 return;
             }
             
-            allMessages = allMessages.filter(m => m.id !== messageId);
-            localStorage.setItem('messages', JSON.stringify(allMessages));
-            
-            loadDashboard();
+            try {
+                await deleteMessageFromFirebase(messageId);
+                await loadDashboard(); // Reload data
+            } catch (error) {
+                console.error("Error deleting message:", error);
+                alert("Fout bij het verwijderen van het bericht. Probeer het opnieuw.");
+            }
         }
 
-        function refreshDashboard() {
-            loadDashboard();
+        async function refreshDashboard() {
+            await loadDashboard();
             // Reset filters
             document.getElementById('status-filter').value = 'all';
             document.getElementById('type-filter').value = 'all';
@@ -941,7 +1070,7 @@
             document.body.removeChild(link);
         }
 
-        function resetAllBookings() {
+        async function resetAllBookings() {
             if (!confirm('Weet u zeker dat u ALLE afspraken en berichten wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
                 return;
             }
@@ -950,21 +1079,25 @@
                 return;
             }
             
-            // Clear all data
-            localStorage.removeItem('bookings');
-            localStorage.removeItem('bookedSlots');
-            localStorage.removeItem('messages');
-            
-            // Reset arrays
-            allBookings = [];
-            filteredBookings = [];
-            allMessages = [];
-            filteredMessages = [];
-            
-            // Refresh dashboard
-            loadDashboard();
-            
-            alert('Alle gegevens zijn verwijderd.');
+            try {
+                await deleteAllBookingsFromFirebase();
+                
+                // Reset arrays
+                allBookings = [];
+                filteredBookings = [];
+                allMessages = [];
+                filteredMessages = [];
+                
+                // Refresh dashboard
+                updateStats();
+                renderBookingsTable();
+                renderMessagesTable();
+                
+                alert('Alle gegevens zijn verwijderd.');
+            } catch (error) {
+                console.error("Error resetting all data:", error);
+                alert("Fout bij het verwijderen van alle gegevens. Probeer het opnieuw.");
+            }
         }
 
         // Close modal when clicking outside
@@ -974,11 +1107,35 @@
             }
         });
 
-        // Initialize dashboard if already logged in (for development)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-login for demo purposes - remove in production
-            // adminLogin({ preventDefault: () => {} });
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Wait for Firebase to be available
+            let attempts = 0;
+            while (!window.firebaseDb && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!initializeFirebase()) {
+                alert("Fout bij het laden van Firebase. Controleer uw internetverbinding en probeer opnieuw.");
+            }
         });
+
+        // Make functions available globally
+        window.adminLogin = adminLogin;
+        window.adminLogout = adminLogout;
+        window.loadDashboard = loadDashboard;
+        window.filterBookings = filterBookings;
+        window.viewBookingDetails = viewBookingDetails;
+        window.closeBookingModal = closeBookingModal;
+        window.deleteBooking = deleteBooking;
+        window.showTab = showTab;
+        window.filterMessages = filterMessages;
+        window.performSearch = performSearch;
+        window.viewMessageDetails = viewMessageDetails;
+        window.deleteMessage = deleteMessage;
+        window.refreshDashboard = refreshDashboard;
+        window.exportBookings = exportBookings;
+        window.resetAllBookings = resetAllBookings;
     </script>
 </body>
 </html>

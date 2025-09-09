@@ -1,4 +1,117 @@
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  deleteDoc,
+  query,
+  where,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+
 let currentLanguage = localStorage.getItem("preferred-language") || "nl"
+let db = null
+
+function initializeFirebase() {
+  if (window.firebaseDb) {
+    db = window.firebaseDb
+    console.log("Firebase initialized successfully")
+    return true
+  }
+  console.error("Firebase not initialized")
+  return false
+}
+
+function showLoading() {
+  document.getElementById("loading-overlay").classList.remove("hidden")
+}
+
+function hideLoading() {
+  document.getElementById("loading-overlay").classList.add("hidden")
+}
+
+async function saveBooking(bookingData) {
+  try {
+    showLoading()
+    const docRef = await addDoc(collection(db, "bookings"), bookingData)
+    console.log("Booking saved with ID: ", docRef.id)
+    return docRef.id
+  } catch (error) {
+    console.error("Error saving booking: ", error)
+    throw error
+  } finally {
+    hideLoading()
+  }
+}
+
+async function saveMessage(messageData) {
+  try {
+    showLoading()
+    const docRef = await addDoc(collection(db, "messages"), messageData)
+    console.log("Message saved with ID: ", docRef.id)
+    return docRef.id
+  } catch (error) {
+    console.error("Error saving message: ", error)
+    throw error
+  } finally {
+    hideLoading()
+  }
+}
+
+async function getBookedSlots() {
+  try {
+    const querySnapshot = await getDocs(collection(db, "bookings"))
+    const bookedSlots = {}
+
+    querySnapshot.forEach((doc) => {
+      const booking = doc.data()
+      const dateKey = booking.date
+      if (!bookedSlots[dateKey]) {
+        bookedSlots[dateKey] = []
+      }
+      bookedSlots[dateKey].push(booking.time)
+    })
+
+    return bookedSlots
+  } catch (error) {
+    console.error("Error getting booked slots: ", error)
+    return {}
+  }
+}
+
+async function cancelBookingByEmail(email, reason) {
+  try {
+    showLoading()
+    const q = query(collection(db, "bookings"), where("email", "==", email))
+    const querySnapshot = await getDocs(q)
+
+    if (!querySnapshot.empty) {
+      const bookingDoc = querySnapshot.docs[0]
+      const bookingData = bookingDoc.data()
+
+      // Save cancellation record
+      const cancellation = {
+        id: Date.now(),
+        originalBooking: bookingData,
+        reason: reason,
+        cancelledAt: new Date().toISOString(),
+        type: "cancellation",
+      }
+
+      await saveMessage(cancellation)
+
+      // Delete the booking
+      await deleteDoc(doc(db, "bookings", bookingDoc.id))
+
+      return true
+    }
+    return false
+  } catch (error) {
+    console.error("Error cancelling booking: ", error)
+    throw error
+  } finally {
+    hideLoading()
+  }
+}
 
 // Added booking calendar system variables and functions
 const currentDate = new Date()
@@ -24,10 +137,20 @@ const timeSlots = [
   "16:30",
 ]
 
-// Initialize calendar on page load
-document.addEventListener("DOMContentLoaded", () => {
-  switchLanguage(currentLanguage)
-  generateCalendar()
+document.addEventListener("DOMContentLoaded", async () => {
+  // Wait for Firebase to be available
+  let attempts = 0
+  while (!window.firebaseDb && attempts < 50) {
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    attempts++
+  }
+
+  if (initializeFirebase()) {
+    switchLanguage(currentLanguage)
+    await generateCalendar()
+  } else {
+    alert("Fout bij het laden van de applicatie. Probeer de pagina te vernieuwen.")
+  }
 })
 
 function switchLanguage(lang) {
@@ -80,8 +203,8 @@ function toggleMobileMenu() {
   menu.classList.toggle("hidden")
 }
 
-function generateCalendar() {
-  bookedSlots = JSON.parse(localStorage.getItem("bookedSlots") || "{}")
+async function generateCalendar() {
+  bookedSlots = await getBookedSlots()
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -185,8 +308,6 @@ function selectDate(date) {
 }
 
 function showTimeSlots(date) {
-  bookedSlots = JSON.parse(localStorage.getItem("bookedSlots") || "{}")
-
   const timeSlotsContainer = document.getElementById("time-slots")
   const timeSlotsGrid = document.getElementById("time-slots-grid")
 
@@ -290,7 +411,7 @@ const sectionObserver = new IntersectionObserver((entries) => {
   })
 }, observerOptions)
 
-function submitBooking(event) {
+async function submitBooking(event) {
   event.preventDefault()
 
   if (!selectedDate || !selectedTime) return
@@ -301,8 +422,7 @@ function submitBooking(event) {
   submitButton.classList.add("loading")
   submitButton.textContent = ""
 
-  // Simulate processing time
-  setTimeout(() => {
+  try {
     // Get form data
     const name = document.getElementById("booking-name").value
     const email = document.getElementById("booking-email").value
@@ -312,7 +432,6 @@ function submitBooking(event) {
 
     // Create booking object
     const booking = {
-      id: Date.now(),
       date: selectedDate.toISOString().split("T")[0],
       time: selectedTime,
       name: name,
@@ -323,18 +442,8 @@ function submitBooking(event) {
       created: new Date().toISOString(),
     }
 
-    // Save booking to localStorage
-    const dateKey = booking.date
-    if (!bookedSlots[dateKey]) {
-      bookedSlots[dateKey] = []
-    }
-    bookedSlots[dateKey].push(selectedTime)
-    localStorage.setItem("bookedSlots", JSON.stringify(bookedSlots))
-
-    // Save booking details for admin
-    const bookings = JSON.parse(localStorage.getItem("bookings") || "[]")
-    bookings.push(booking)
-    localStorage.setItem("bookings", JSON.stringify(bookings))
+    // Save booking to Firebase
+    await saveBooking(booking)
 
     // Remove loading animation
     submitButton.classList.remove("loading")
@@ -360,16 +469,27 @@ function submitBooking(event) {
     selectedDate = null
     selectedTime = null
     document.getElementById("time-slots").classList.add("hidden")
-    generateCalendar()
+    await generateCalendar()
 
     // Scroll to success message
     setTimeout(() => {
       document.getElementById("booking-success").scrollIntoView({ behavior: "smooth" })
     }, 400)
-  }, 1500)
+  } catch (error) {
+    console.error("Error submitting booking:", error)
+    alert(
+      currentLanguage === "nl"
+        ? "Er is een fout opgetreden bij het opslaan van uw afspraak. Probeer het opnieuw."
+        : "An error occurred while saving your appointment. Please try again.",
+    )
+
+    // Remove loading animation
+    submitButton.classList.remove("loading")
+    submitButton.textContent = originalText
+  }
 }
 
-function handleContactForm(event) {
+async function handleContactForm(event) {
   event.preventDefault()
   const submitButton = event.target.querySelector('button[type="submit"]')
   const originalText = submitButton.textContent
@@ -378,14 +498,13 @@ function handleContactForm(event) {
   submitButton.classList.add("loading")
   submitButton.textContent = ""
 
-  setTimeout(() => {
+  try {
     const name = document.getElementById("contact-name").value
     const email = document.getElementById("contact-email").value
     const subject = document.getElementById("contact-subject").value
     const message = document.getElementById("contact-message").value
 
     const contactMessage = {
-      id: Date.now(),
       name: name,
       email: email,
       subject: subject,
@@ -394,10 +513,8 @@ function handleContactForm(event) {
       type: "contact",
     }
 
-    // Save to localStorage for admin panel
-    const messages = JSON.parse(localStorage.getItem("messages") || "[]")
-    messages.push(contactMessage)
-    localStorage.setItem("messages", JSON.stringify(messages))
+    // Save to Firebase
+    await saveMessage(contactMessage)
 
     // Remove loading animation
     submitButton.classList.remove("loading")
@@ -415,7 +532,18 @@ function handleContactForm(event) {
         document.getElementById("contact-success").classList.add("hidden")
       }, 5000)
     }
-  }, 1000)
+  } catch (error) {
+    console.error("Error submitting contact form:", error)
+    alert(
+      currentLanguage === "nl"
+        ? "Er is een fout opgetreden bij het verzenden van uw bericht. Probeer het opnieuw."
+        : "An error occurred while sending your message. Please try again.",
+    )
+
+    // Remove loading animation
+    submitButton.classList.remove("loading")
+    submitButton.textContent = originalText
+  }
 }
 
 function showCancelForm() {
@@ -429,62 +557,38 @@ function hideCancelForm() {
   document.getElementById("cancel-reason").value = ""
 }
 
-function cancelAppointment(event) {
+async function cancelAppointment(event) {
   event.preventDefault()
 
   const email = document.getElementById("cancel-email").value
   const reason = document.getElementById("cancel-reason").value
 
-  // Find and remove the booking
-  const bookings = JSON.parse(localStorage.getItem("bookings") || "[]")
-  const bookingIndex = bookings.findIndex((booking) => booking.email === email)
+  try {
+    const success = await cancelBookingByEmail(email, reason)
 
-  if (bookingIndex !== -1) {
-    const cancelledBooking = bookings[bookingIndex]
+    if (success) {
+      // Hide form and show success
+      document.getElementById("cancel-form").classList.add("hidden")
+      document.getElementById("cancel-success").classList.remove("hidden")
 
-    // Remove from bookings
-    bookings.splice(bookingIndex, 1)
-    localStorage.setItem("bookings", JSON.stringify(bookings))
+      // Hide booking success message
+      document.getElementById("booking-success").classList.add("hidden")
 
-    // Free up the time slot
-    const bookedSlots = JSON.parse(localStorage.getItem("bookedSlots") || "{}")
-    if (bookedSlots[cancelledBooking.date]) {
-      bookedSlots[cancelledBooking.date] = bookedSlots[cancelledBooking.date].filter(
-        (time) => time !== cancelledBooking.time,
+      // Regenerate calendar to show freed slot
+      await generateCalendar()
+    } else {
+      alert(
+        currentLanguage === "nl"
+          ? "Geen afspraak gevonden met dit e-mailadres."
+          : "No appointment found with this email address.",
       )
-      if (bookedSlots[cancelledBooking.date].length === 0) {
-        delete bookedSlots[cancelledBooking.date]
-      }
-      localStorage.setItem("bookedSlots", JSON.stringify(bookedSlots))
     }
-
-    // Save cancellation record for admin
-    const cancellation = {
-      id: Date.now(),
-      originalBooking: cancelledBooking,
-      reason: reason,
-      cancelledAt: new Date().toISOString(),
-      type: "cancellation",
-    }
-
-    const messages = JSON.parse(localStorage.getItem("messages") || "[]")
-    messages.push(cancellation)
-    localStorage.setItem("messages", JSON.stringify(messages))
-
-    // Hide form and show success
-    document.getElementById("cancel-form").classList.add("hidden")
-    document.getElementById("cancel-success").classList.remove("hidden")
-
-    // Hide booking success message
-    document.getElementById("booking-success").classList.add("hidden")
-
-    // Regenerate calendar to show freed slot
-    generateCalendar()
-  } else {
+  } catch (error) {
+    console.error("Error cancelling appointment:", error)
     alert(
       currentLanguage === "nl"
-        ? "Geen afspraak gevonden met dit e-mailadres."
-        : "No appointment found with this email address.",
+        ? "Er is een fout opgetreden bij het annuleren van uw afspraak. Probeer het opnieuw."
+        : "An error occurred while cancelling your appointment. Please try again.",
     )
   }
 }
