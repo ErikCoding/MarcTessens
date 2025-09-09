@@ -16,7 +16,8 @@
         import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         // Your web app's Firebase configuration
-        // UWAGA: Zastąp te wartości swoimi danymi z Firebase Console
+        // BELANGRIJK: Vervang deze waarden door uw eigen Firebase project gegevens!
+        // Ga naar https://console.firebase.google.com en kopieer uw config
         const firebaseConfig = {
   apiKey: "AIzaSyBFPLvEIK5B48Ldm44bMjGPVyCPbOfrANg",
   authDomain: "marc-tessens.firebaseapp.com",
@@ -27,24 +28,83 @@
   appId: "1:121454227452:web:a2756542378505f8a08c79"
 };
         
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Check if Firebase config is properly set
+        const isConfigValid = firebaseConfig.apiKey !== "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" && 
+                             firebaseConfig.projectId !== "uw-project-id";
         
-        // Make Firebase available globally
-        window.firebaseApp = app;
-        window.firebaseDb = db;
-        window.firebaseCollection = collection;
-        window.firebaseAddDoc = addDoc;
-        window.firebaseGetDocs = getDocs;
-        window.firebaseQuery = query;
-        window.firebaseWhere = where;
-        window.firebaseDeleteDoc = deleteDoc;
-        window.firebaseDoc = doc;
-        window.firebaseUpdateDoc = updateDoc;
-        window.firebaseOrderBy = orderBy;
+        if (!isConfigValid) {
+            console.error("[v0] Firebase configuratie niet ingesteld! Volg de instructies in INSTRUKCJE_KONFIGURACJI_FIREBASE.md");
+            
+            // Show user-friendly error message
+            document.addEventListener('DOMContentLoaded', () => {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'fixed top-0 left-0 right-0 bg-red-600 text-white p-4 text-center z-50';
+                errorDiv.innerHTML = `
+                    <strong>Firebase niet geconfigureerd!</strong> 
+                    Volg de instructies in het bestand INSTRUKCJE_KONFIGURACJI_FIREBASE.md om Firebase in te stellen.
+                    <button onclick="this.parentElement.remove()" class="ml-4 bg-red-800 px-2 py-1 rounded">×</button>
+                `;
+                document.body.insertBefore(errorDiv, document.body.firstChild);
+            });
+            
+            // Create mock functions for development
+            window.firebaseDb = null;
+            window.firebaseCollection = () => ({ path: 'mock' });
+            window.firebaseAddDoc = () => Promise.reject(new Error('Firebase niet geconfigureerd'));
+            window.firebaseGetDocs = () => Promise.resolve({ forEach: () => {} });
+            window.firebaseQuery = () => ({ path: 'mock' });
+            window.firebaseWhere = () => ({ field: 'mock' });
+            window.firebaseDeleteDoc = () => Promise.reject(new Error('Firebase niet geconfigureerd'));
+            window.firebaseDoc = () => ({ path: 'mock' });
+            window.firebaseUpdateDoc = () => Promise.reject(new Error('Firebase niet geconfigureerd'));
+            window.firebaseOrderBy = () => ({ field: 'mock' });
+            
+            return;
+        }
         
-        console.log("[v0] Firebase initialized successfully");
+        try {
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            
+            // Make Firebase available globally
+            window.firebaseApp = app;
+            window.firebaseDb = db;
+            window.firebaseCollection = collection;
+            window.firebaseAddDoc = addDoc;
+            window.firebaseGetDocs = getDocs;
+            window.firebaseQuery = query;
+            window.firebaseWhere = where;
+            window.firebaseDeleteDoc = deleteDoc;
+            window.firebaseDoc = doc;
+            window.firebaseUpdateDoc = updateDoc;
+            window.firebaseOrderBy = orderBy;
+            
+            console.log("[v0] Firebase initialized successfully with project:", firebaseConfig.projectId);
+            
+            // Test Firebase connection
+            window.firebaseGetDocs(window.firebaseCollection(db, "test"))
+                .then(() => {
+                    console.log("[v0] Firebase connection test successful");
+                })
+                .catch((error) => {
+                    console.warn("[v0] Firebase connection test failed (normal for new projects):", error.message);
+                });
+                
+        } catch (error) {
+            console.error("[v0] Firebase initialization failed:", error);
+            
+            // Show user-friendly error message
+            document.addEventListener('DOMContentLoaded', () => {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'fixed top-0 left-0 right-0 bg-red-600 text-white p-4 text-center z-50';
+                errorDiv.innerHTML = `
+                    <strong>Firebase fout:</strong> ${error.message}
+                    <button onclick="this.parentElement.remove()" class="ml-4 bg-red-800 px-2 py-1 rounded">×</button>
+                `;
+                document.body.insertBefore(errorDiv, document.body.firstChild);
+            });
+        }
     </script>
 </head>
 <body class="font-source bg-white text-gray-700">

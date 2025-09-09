@@ -133,11 +133,13 @@ const timeSlots = [
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("[v0] DOM loaded, initializing application...")
 
-  // Wait for Firebase to be available with timeout
   let attempts = 0
   const maxAttempts = 100
 
+  console.log("[v0] Waiting for Firebase to load...")
+
   while (!window.firebaseDb && attempts < maxAttempts) {
+    console.log(`[v0] Firebase attempt ${attempts + 1}/${maxAttempts}`)
     await new Promise((resolve) => setTimeout(resolve, 100))
     attempts++
   }
@@ -147,6 +149,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     alert("Fout bij het laden van de applicatie. Controleer uw internetverbinding en vernieuw de pagina.")
     return
   }
+
+  const requiredFunctions = [
+    "firebaseDb",
+    "firebaseAddDoc",
+    "firebaseCollection",
+    "firebaseGetDocs",
+    "firebaseQuery",
+    "firebaseWhere",
+    "firebaseDeleteDoc",
+    "firebaseDoc",
+  ]
+  const missingFunctions = requiredFunctions.filter((func) => !window[func])
+
+  if (missingFunctions.length > 0) {
+    console.error("[v0] Missing Firebase functions:", missingFunctions)
+    alert("Firebase functies zijn niet geladen. Controleer uw internetverbinding en vernieuw de pagina.")
+    return
+  }
+
+  console.log(
+    "[v0] All Firebase functions available:",
+    requiredFunctions.map((func) => `${func}: ${typeof window[func]}`),
+  )
 
   if (initializeFirebase()) {
     console.log("[v0] Starting application initialization...")
@@ -436,8 +461,18 @@ const sectionObserver = new IntersectionObserver((entries) => {
 
 async function submitBooking(event) {
   event.preventDefault()
+  console.log("[v0] Submit booking called")
 
-  if (!selectedDate || !selectedTime) return
+  if (!selectedDate || !selectedTime) {
+    console.log("[v0] No date or time selected")
+    return
+  }
+
+  if (!db) {
+    console.error("[v0] Database not initialized")
+    alert("Database niet geïnitialiseerd. Vernieuw de pagina en probeer opnieuw.")
+    return
+  }
 
   // Add loading animation
   const submitButton = document.getElementById("booking-submit")
@@ -446,12 +481,15 @@ async function submitBooking(event) {
   submitButton.textContent = ""
 
   try {
+    console.log("[v0] Getting form data...")
     // Get form data
     const name = document.getElementById("booking-name").value
     const email = document.getElementById("booking-email").value
     const phone = document.getElementById("booking-phone").value
     const type = document.getElementById("booking-type").value
     const notes = document.getElementById("booking-notes").value
+
+    console.log("[v0] Form data:", { name, email, phone, type, notes })
 
     // Create booking object
     const booking = {
@@ -465,8 +503,19 @@ async function submitBooking(event) {
       created: new Date().toISOString(),
     }
 
+    console.log("[v0] Booking object:", booking)
+    console.log("[v0] Attempting to save booking...")
+
+    console.log("[v0] Firebase functions check:", {
+      db: !!db,
+      firebaseAddDoc: typeof window.firebaseAddDoc,
+      firebaseCollection: typeof window.firebaseCollection,
+    })
+
     // Save booking to Firebase
     await saveBooking(booking)
+
+    console.log("[v0] Booking saved successfully!")
 
     // Remove loading animation
     submitButton.classList.remove("loading")
@@ -500,10 +549,18 @@ async function submitBooking(event) {
     }, 400)
   } catch (error) {
     console.error("[v0] Error submitting booking:", error)
+    console.error("[v0] Error details:", error.message, error.stack)
+
+    let errorMessage = "Er is een fout opgetreden bij het opslaan van uw afspraak."
+    if (error.message.includes("permission")) {
+      errorMessage += " Controleer de Firebase beveiligingsregels."
+    } else if (error.message.includes("network")) {
+      errorMessage += " Controleer uw internetverbinding."
+    }
+    errorMessage += " Probeer het opnieuw."
+
     alert(
-      currentLanguage === "nl"
-        ? "Er is een fout opgetreden bij het opslaan van uw afspraak. Probeer het opnieuw."
-        : "An error occurred while saving your appointment. Please try again.",
+      currentLanguage === "nl" ? errorMessage : "An error occurred while saving your appointment. Please try again.",
     )
 
     // Remove loading animation
