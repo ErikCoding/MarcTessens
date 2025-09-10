@@ -9,11 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     
-    <!-- Poprawiona konfiguracja Firebase z lepszym error handling -->
+    <!-- Updated Firebase configuration to use Realtime Database -->
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getDatabase, ref, push, set, get, remove, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -30,27 +30,26 @@
         window.firebaseError = null;
         
         try {
-            console.log("[v0] Inicjalizacja Firebase...");
+            console.log("[v0] Inicjalizacja Firebase Realtime Database...");
             
             // Initialize Firebase
             const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
+            const database = getDatabase(app);
             
-            // Make Firebase available globally
+            // Make Firebase Realtime Database available globally
             window.firebaseApp = app;
-            window.firebaseDb = db;
-            window.firebaseCollection = collection;
-            window.firebaseAddDoc = addDoc;
-            window.firebaseGetDocs = getDocs;
+            window.firebaseDb = database;
+            window.firebaseRef = ref;
+            window.firebasePush = push;
+            window.firebaseSet = set;
+            window.firebaseGet = get;
+            window.firebaseRemove = remove;
             window.firebaseQuery = query;
-            window.firebaseWhere = where;
-            window.firebaseDeleteDoc = deleteDoc;
-            window.firebaseDoc = doc;
-            window.firebaseUpdateDoc = updateDoc;
-            window.firebaseOrderBy = orderBy;
+            window.firebaseOrderByChild = orderByChild;
+            window.firebaseEqualTo = equalTo;
             
             window.firebaseInitialized = true;
-            console.log("[v0] Firebase zainicjalizowany pomyślnie!");
+            console.log("[v0] Firebase Realtime Database zainicjalizowany pomyślnie!");
             
             window.dispatchEvent(new CustomEvent('firebaseReady'));
             

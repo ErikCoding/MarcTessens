@@ -12,7 +12,7 @@ function initializeFirebase() {
 
   if (window.firebaseInitialized && window.firebaseDb) {
     db = window.firebaseDb
-    console.log("[v0] Firebase zainicjalizowany pomyślnie!")
+    console.log("[v0] Firebase Realtime Database zainicjalizowany pomyślnie!")
     return true
   }
 
@@ -38,9 +38,11 @@ function hideInitMessage() {
 async function saveBooking(bookingData) {
   try {
     showLoading()
-    const docRef = await window.firebaseAddDoc(window.firebaseCollection(db, "bookings"), bookingData)
-    console.log("[v0] Rezerwacja zapisana z ID: ", docRef.id)
-    return docRef.id
+    const bookingsRef = window.firebaseRef(db, "bookings")
+    const newBookingRef = window.firebasePush(bookingsRef)
+    await window.firebaseSet(newBookingRef, bookingData)
+    console.log("[v0] Rezerwacja zapisana z ID: ", newBookingRef.key)
+    return newBookingRef.key
   } catch (error) {
     console.error("[v0] Błąd zapisywania rezerwacji: ", error)
     throw error
@@ -52,9 +54,11 @@ async function saveBooking(bookingData) {
 async function saveMessage(messageData) {
   try {
     showLoading()
-    const docRef = await window.firebaseAddDoc(window.firebaseCollection(db, "messages"), messageData)
-    console.log("[v0] Wiadomość zapisana z ID: ", docRef.id)
-    return docRef.id
+    const messagesRef = window.firebaseRef(db, "messages")
+    const newMessageRef = window.firebasePush(messagesRef)
+    await window.firebaseSet(newMessageRef, messageData)
+    console.log("[v0] Wiadomość zapisana z ID: ", newMessageRef.key)
+    return newMessageRef.key
   } catch (error) {
     console.error("[v0] Błąd zapisywania wiadomości: ", error)
     throw error
@@ -65,17 +69,21 @@ async function saveMessage(messageData) {
 
 async function getBookedSlots() {
   try {
-    const querySnapshot = await window.firebaseGetDocs(window.firebaseCollection(db, "bookings"))
+    const bookingsRef = window.firebaseRef(db, "bookings")
+    const snapshot = await window.firebaseGet(bookingsRef)
     const bookedSlots = {}
 
-    querySnapshot.forEach((doc) => {
-      const booking = doc.data()
-      const dateKey = booking.date
-      if (!bookedSlots[dateKey]) {
-        bookedSlots[dateKey] = []
-      }
-      bookedSlots[dateKey].push(booking.time)
-    })
+    if (snapshot.exists()) {
+      const bookings = snapshot.val()
+      Object.keys(bookings).forEach((key) => {
+        const booking = bookings[key]
+        const dateKey = booking.date
+        if (!bookedSlots[dateKey]) {
+          bookedSlots[dateKey] = []
+        }
+        bookedSlots[dateKey].push(booking.time)
+      })
+    }
 
     return bookedSlots
   } catch (error) {
@@ -87,31 +95,40 @@ async function getBookedSlots() {
 async function cancelBookingByEmail(email, reason) {
   try {
     showLoading()
-    const q = window.firebaseQuery(
-      window.firebaseCollection(db, "bookings"),
-      window.firebaseWhere("email", "==", email),
-    )
-    const querySnapshot = await window.firebaseGetDocs(q)
+    const bookingsRef = window.firebaseRef(db, "bookings")
+    const snapshot = await window.firebaseGet(bookingsRef)
 
-    if (!querySnapshot.empty) {
-      const bookingDoc = querySnapshot.docs[0]
-      const bookingData = bookingDoc.data()
+    if (snapshot.exists()) {
+      const bookings = snapshot.val()
+      let foundBookingKey = null
+      let foundBookingData = null
 
-      // Save cancellation record
-      const cancellation = {
-        id: Date.now(),
-        originalBooking: bookingData,
-        reason: reason,
-        cancelledAt: new Date().toISOString(),
-        type: "cancellation",
+      // Find booking by email
+      Object.keys(bookings).forEach((key) => {
+        if (bookings[key].email === email) {
+          foundBookingKey = key
+          foundBookingData = bookings[key]
+        }
+      })
+
+      if (foundBookingKey) {
+        // Save cancellation record
+        const cancellation = {
+          id: Date.now(),
+          originalBooking: foundBookingData,
+          reason: reason,
+          cancelledAt: new Date().toISOString(),
+          type: "cancellation",
+        }
+
+        await saveMessage(cancellation)
+
+        // Delete the booking
+        const bookingToDeleteRef = window.firebaseRef(db, `bookings/${foundBookingKey}`)
+        await window.firebaseRemove(bookingToDeleteRef)
+
+        return true
       }
-
-      await saveMessage(cancellation)
-
-      // Delete the booking
-      await window.firebaseDeleteDoc(window.firebaseDoc(db, "bookings", bookingDoc.id))
-
-      return true
     }
     return false
   } catch (error) {
