@@ -407,27 +407,47 @@
         let db = null;
 
         function initializeFirebase() {
-    if (window.firebaseDb) {
-        db = window.firebaseDb;
-        console.log("[v0] Firebase initialized for admin panel");
-        return true;
-    }
-    console.error("[v0] Firebase not initialized for admin panel");
-    return false;
-}
+            if (window.firebaseDb) {
+                db = window.firebaseDb;
+                console.log("[v0] Firebase initialized for admin panel");
+                return true;
+            }
+            console.error("[v0] Firebase not initialized for admin panel");
+            return false;
+        }
 
-function showLoading() {
-    document.getElementById("loading-overlay").classList.remove("hidden");
-}
-
-function hideLoading() {
-    document.getElementById("loading-overlay").classList.add("hidden");
-}
-
+        async function initializeAdminPanel() {
+            console.log("[v0] Initializing admin panel...");
+            
+            // Wait for Firebase to be ready
+            let attempts = 0;
+            const maxAttempts = 50;
+            
+            while (!initializeFirebase() && attempts < maxAttempts) {
+                console.log(`[v0] Waiting for Firebase... attempt ${attempts + 1}/${maxAttempts}`);
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+            }
+            
+            if (attempts >= maxAttempts) {
+                console.error("[v0] Firebase initialization timeout");
+                alert("Błąd ładowania panelu admina. Odśwież stronę i spróbuj ponownie.");
+                return;
+            }
+            
+            console.log("[v0] Firebase ready, loading data...");
+            await loadAllData();
+        }
 
         async function loadBookingsFromFirebase() {
             try {
                 showLoading();
+                
+                if (!db) {
+                    console.error("[v0] Database not initialized");
+                    return [];
+                }
+                
                 const bookingsRef = ref(db, "bookings");
                 const snapshot = await get(bookingsRef);
                 const bookings = [];
@@ -454,6 +474,12 @@ function hideLoading() {
         async function loadMessagesFromFirebase() {
             try {
                 showLoading();
+                
+                if (!db) {
+                    console.error("[v0] Database not initialized");
+                    return [];
+                }
+                
                 const messagesRef = ref(db, "messages");
                 const snapshot = await get(messagesRef);
                 const messages = [];
@@ -1107,10 +1133,25 @@ function hideLoading() {
             }
         });
 
-        // Initialize dashboard when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-login for demo purposes - remove in production
-            // adminLogin({ preventDefault: () => {} });
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[v0] DOM loaded, starting admin panel initialization...");
+            
+            if (window.firebaseInitialized) {
+                // Firebase already ready
+                initializeAdminPanel();
+            } else {
+                // Wait for Firebase
+                window.addEventListener('firebaseReady', () => {
+                    console.log("[v0] Received firebaseReady event");
+                    initializeAdminPanel();
+                });
+                
+                // Fallback - try after 2 seconds
+                setTimeout(() => {
+                    console.log("[v0] Fallback initialization after timeout");
+                    initializeAdminPanel();
+                }, 2000);
+            }
         });
     </script>
 </body>
