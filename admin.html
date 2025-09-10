@@ -60,7 +60,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         
         // Your web app's Firebase configuration
         // UWAGA: Zastąp te wartości swoimi danymi z Firebase Console
@@ -76,7 +76,7 @@
         
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
         
         // Make Firebase available globally
         window.firebaseApp = app;
@@ -397,32 +397,33 @@
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // Admin authentication
-        const ADMIN_PASSWORD = 'admin123'; // In production, this should be more secure
-        let isLoggedIn = false;
-        let allBookings = [];
-        let filteredBookings = [];
-        let allMessages = [];
-        let filteredMessages = [];
-        let currentTab = 'bookings';
-        let datb = null;
+const ADMIN_PASSWORD = 'admin123'; // In production, this should be more secure
+let isLoggedIn = false;
+let allBookings = [];
+let filteredBookings = [];
+let allMessages = [];
+let filteredMessages = [];
+let currentTab = 'bookings';
+let datb = null;
 
-        function initializeFirebase() {
-            if (window.firebaseDb) {
-                datb = window.firebaseDb;
-                console.log("[v0] Firebase initialized for admin panel");
-                return true;
-            }
-            console.error("[v0] Firebase not initialized for admin panel");
-            return false;
-        }
+function initializeFirebase() {
+    if (window.firebaseDb) {
+        db = window.firebaseDb;
+        console.log("[v0] Firebase initialized for admin panel");
+        return true;
+    }
+    console.error("[v0] Firebase not initialized for admin panel");
+    return false;
+}
 
-        function showLoading() {
-            document.getElementById("loading-overlay").classList.remove("hidden");
-        }
+function showLoading() {
+    document.getElementById("loading-overlay").classList.remove("hidden");
+}
 
-        function hideLoading() {
-            document.getElementById("loading-overlay").classList.add("hidden");
-        }
+function hideLoading() {
+    document.getElementById("loading-overlay").classList.add("hidden");
+}
+
 
         async function loadBookingsFromFirebase() {
             try {
@@ -1107,4 +1108,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
