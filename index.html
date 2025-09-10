@@ -9,60 +9,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     
-    <!-- Updated Firebase SDK to latest version and added proper configuration -->
+    <!-- Poprawiona konfiguracja Firebase z lepszym error handling -->
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         // Your web app's Firebase configuration
-        // BELANGRIJK: Vervang deze waarden door uw eigen Firebase project gegevens!
-        // Ga naar https://console.firebase.google.com en kopieer uw config
         const firebaseConfig = {
-  apiKey: "AIzaSyBFPLvEIK5B48Ldm44bMjGPVyCPbOfrANg",
-  authDomain: "marc-tessens.firebaseapp.com",
-  databaseURL: "https://marc-tessens-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "marc-tessens",
-  storageBucket: "marc-tessens.firebasestorage.app",
-  messagingSenderId: "121454227452",
-  appId: "1:121454227452:web:a2756542378505f8a08c79"
-};
+            apiKey: "AIzaSyBFPLvEIK5B48Ldm44bMjGPVyCPbOfrANg",
+            authDomain: "marc-tessens.firebaseapp.com",
+            databaseURL: "https://marc-tessens-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "marc-tessens",
+            storageBucket: "marc-tessens.firebasestorage.app",
+            messagingSenderId: "121454227452",
+            appId: "1:121454227452:web:a2756542378505f8a08c79"
+        };
         
-        // Check if Firebase config is properly set
-        const isConfigValid = firebaseConfig.apiKey !== "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" && 
-                             firebaseConfig.projectId !== "uw-project-id";
-        
-        if (!isConfigValid) {
-            console.error("[v0] Firebase configuratie niet ingesteld! Volg de instructies in INSTRUKCJE_KONFIGURACJI_FIREBASE.md");
-            
-            // Show user-friendly error message
-            document.addEventListener('DOMContentLoaded', () => {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'fixed top-0 left-0 right-0 bg-red-600 text-white p-4 text-center z-50';
-                errorDiv.innerHTML = `
-                    <strong>Firebase niet geconfigureerd!</strong> 
-                    Volg de instructies in het bestand INSTRUKCJE_KONFIGURACJI_FIREBASE.md om Firebase in te stellen.
-                    <button onclick="this.parentElement.remove()" class="ml-4 bg-red-800 px-2 py-1 rounded">×</button>
-                `;
-                document.body.insertBefore(errorDiv, document.body.firstChild);
-            });
-            
-            // Create mock functions for development
-            window.firebaseDb = null;
-            window.firebaseCollection = () => ({ path: 'mock' });
-            window.firebaseAddDoc = () => Promise.reject(new Error('Firebase niet geconfigureerd'));
-            window.firebaseGetDocs = () => Promise.resolve({ forEach: () => {} });
-            window.firebaseQuery = () => ({ path: 'mock' });
-            window.firebaseWhere = () => ({ field: 'mock' });
-            window.firebaseDeleteDoc = () => Promise.reject(new Error('Firebase niet geconfigureerd'));
-            window.firebaseDoc = () => ({ path: 'mock' });
-            window.firebaseUpdateDoc = () => Promise.reject(new Error('Firebase niet geconfigureerd'));
-            window.firebaseOrderBy = () => ({ field: 'mock' });
-            
-            return;
-        }
+        window.firebaseInitialized = false;
+        window.firebaseError = null;
         
         try {
+            console.log("[v0] Inicjalizacja Firebase...");
+            
             // Initialize Firebase
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
@@ -80,26 +49,20 @@
             window.firebaseUpdateDoc = updateDoc;
             window.firebaseOrderBy = orderBy;
             
-            console.log("[v0] Firebase initialized successfully with project:", firebaseConfig.projectId);
+            window.firebaseInitialized = true;
+            console.log("[v0] Firebase zainicjalizowany pomyślnie!");
             
-            // Test Firebase connection
-            window.firebaseGetDocs(window.firebaseCollection(db, "test"))
-                .then(() => {
-                    console.log("[v0] Firebase connection test successful");
-                })
-                .catch((error) => {
-                    console.warn("[v0] Firebase connection test failed (normal for new projects):", error.message);
-                });
-                
+            window.dispatchEvent(new CustomEvent('firebaseReady'));
+            
         } catch (error) {
-            console.error("[v0] Firebase initialization failed:", error);
+            console.error("[v0] Błąd inicjalizacji Firebase:", error);
+            window.firebaseError = error;
             
-            // Show user-friendly error message
             document.addEventListener('DOMContentLoaded', () => {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'fixed top-0 left-0 right-0 bg-red-600 text-white p-4 text-center z-50';
                 errorDiv.innerHTML = `
-                    <strong>Firebase fout:</strong> ${error.message}
+                    <strong>Błąd Firebase:</strong> ${error.message}
                     <button onclick="this.parentElement.remove()" class="ml-4 bg-red-800 px-2 py-1 rounded">×</button>
                 `;
                 document.body.insertBefore(errorDiv, document.body.firstChild);
@@ -108,12 +71,17 @@
     </script>
 </head>
 <body class="font-source bg-white text-gray-700">
-    <!-- Added loading overlay for Firebase operations -->
+    <!-- Dodano lepszy loading overlay -->
     <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-lg text-center">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-800 mx-auto mb-4"></div>
-            <p class="text-gray-700">Bezig met laden...</p>
+            <p class="text-gray-700">Ładowanie...</p>
         </div>
+    </div>
+
+    <!-- Dodano komunikat o inicjalizacji -->
+    <div id="init-message" class="fixed top-0 left-0 right-0 bg-blue-600 text-white p-2 text-center z-40">
+        <span>Inicjalizacja aplikacji...</span>
     </div>
 
     <div class="language-switcher">
@@ -129,8 +97,8 @@
                 <div class="font-playfair font-bold text-xl text-green-800">Marc Tessens</div>
                 <div class="hidden md:flex space-x-8">
                     <a href="#home" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Home" data-en="Home">Home</a>
-                    <a href="#services" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Diensten" data-en="Services">Diensten</a>
                     <a href="#about" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Over Ons" data-en="About">Over Ons</a>
+                    <a href="#services" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Diensten" data-en="Services">Diensten</a>
                     <a href="#booking" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Afspraak" data-en="Appointment">Afspraak</a>
                     <a href="#contact" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Contact" data-en="Contact">Contact</a>
                 </div>

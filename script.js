@@ -1,13 +1,22 @@
 let currentLanguage = localStorage.getItem("preferred-language") || "nl"
 let db = null
+let appInitialized = false
 
 function initializeFirebase() {
-  if (window.firebaseDb) {
+  console.log("[v0] Sprawdzanie inicjalizacji Firebase...")
+
+  if (window.firebaseError) {
+    console.error("[v0] Firebase ma błąd:", window.firebaseError)
+    return false
+  }
+
+  if (window.firebaseInitialized && window.firebaseDb) {
     db = window.firebaseDb
-    console.log("[v0] Firebase initialized successfully")
+    console.log("[v0] Firebase zainicjalizowany pomyślnie!")
     return true
   }
-  console.error("[v0] Firebase not initialized")
+
+  console.log("[v0] Firebase jeszcze nie gotowy...")
   return false
 }
 
@@ -19,14 +28,21 @@ function hideLoading() {
   document.getElementById("loading-overlay").classList.add("hidden")
 }
 
+function hideInitMessage() {
+  const initMessage = document.getElementById("init-message")
+  if (initMessage) {
+    initMessage.style.display = "none"
+  }
+}
+
 async function saveBooking(bookingData) {
   try {
     showLoading()
     const docRef = await window.firebaseAddDoc(window.firebaseCollection(db, "bookings"), bookingData)
-    console.log("[v0] Booking saved with ID: ", docRef.id)
+    console.log("[v0] Rezerwacja zapisana z ID: ", docRef.id)
     return docRef.id
   } catch (error) {
-    console.error("[v0] Error saving booking: ", error)
+    console.error("[v0] Błąd zapisywania rezerwacji: ", error)
     throw error
   } finally {
     hideLoading()
@@ -37,10 +53,10 @@ async function saveMessage(messageData) {
   try {
     showLoading()
     const docRef = await window.firebaseAddDoc(window.firebaseCollection(db, "messages"), messageData)
-    console.log("[v0] Message saved with ID: ", docRef.id)
+    console.log("[v0] Wiadomość zapisana z ID: ", docRef.id)
     return docRef.id
   } catch (error) {
-    console.error("[v0] Error saving message: ", error)
+    console.error("[v0] Błąd zapisywania wiadomości: ", error)
     throw error
   } finally {
     hideLoading()
@@ -63,7 +79,7 @@ async function getBookedSlots() {
 
     return bookedSlots
   } catch (error) {
-    console.error("[v0] Error getting booked slots: ", error)
+    console.error("[v0] Błąd pobierania zajętych terminów: ", error)
     return {}
   }
 }
@@ -99,14 +115,13 @@ async function cancelBookingByEmail(email, reason) {
     }
     return false
   } catch (error) {
-    console.error("[v0] Error cancelling booking: ", error)
+    console.error("[v0] Błąd anulowania rezerwacji: ", error)
     throw error
   } finally {
     hideLoading()
   }
 }
 
-// Added booking calendar system variables and functions
 const currentDate = new Date()
 let selectedDate = null
 let selectedTime = null
@@ -130,56 +145,59 @@ const timeSlots = [
   "16:30",
 ]
 
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[v0] DOM loaded, initializing application...")
+async function initializeApp() {
+  console.log("[v0] Rozpoczynanie inicjalizacji aplikacji...")
 
+  // Czekaj na Firebase
   let attempts = 0
-  const maxAttempts = 100
+  const maxAttempts = 50
 
-  console.log("[v0] Waiting for Firebase to load...")
-
-  while (!window.firebaseDb && attempts < maxAttempts) {
-    console.log(`[v0] Firebase attempt ${attempts + 1}/${maxAttempts}`)
-    await new Promise((resolve) => setTimeout(resolve, 100))
+  while (!initializeFirebase() && attempts < maxAttempts) {
+    console.log(`[v0] Próba Firebase ${attempts + 1}/${maxAttempts}`)
+    await new Promise((resolve) => setTimeout(resolve, 200))
     attempts++
   }
 
   if (attempts >= maxAttempts) {
-    console.error("[v0] Firebase initialization timeout")
-    alert("Fout bij het laden van de applicatie. Controleer uw internetverbinding en vernieuw de pagina.")
+    console.error("[v0] Timeout inicjalizacji Firebase")
+    alert("Błąd ładowania aplikacji. Odśwież stronę i spróbuj ponownie.")
     return
   }
 
-  const requiredFunctions = [
-    "firebaseDb",
-    "firebaseAddDoc",
-    "firebaseCollection",
-    "firebaseGetDocs",
-    "firebaseQuery",
-    "firebaseWhere",
-    "firebaseDeleteDoc",
-    "firebaseDoc",
-  ]
-  const missingFunctions = requiredFunctions.filter((func) => !window[func])
+  console.log("[v0] Firebase gotowy, inicjalizacja aplikacji...")
 
-  if (missingFunctions.length > 0) {
-    console.error("[v0] Missing Firebase functions:", missingFunctions)
-    alert("Firebase functies zijn niet geladen. Controleer uw internetverbinding en vernieuw de pagina.")
-    return
-  }
+  // Inicjalizuj język
+  switchLanguage(currentLanguage)
 
-  console.log(
-    "[v0] All Firebase functions available:",
-    requiredFunctions.map((func) => `${func}: ${typeof window[func]}`),
-  )
+  await generateCalendar()
 
-  if (initializeFirebase()) {
-    console.log("[v0] Starting application initialization...")
-    switchLanguage(currentLanguage)
-    await generateCalendar()
-    console.log("[v0] Application initialized successfully")
+  // Ukryj komunikat inicjalizacji
+  hideInitMessage()
+
+  appInitialized = true
+  console.log("[v0] Aplikacja zainicjalizowana pomyślnie!")
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("[v0] DOM załadowany")
+
+  if (window.firebaseInitialized) {
+    // Firebase już gotowy
+    initializeApp()
   } else {
-    alert("Fout bij het laden van de applicatie. Probeer de pagina te vernieuwen.")
+    // Czekaj na Firebase
+    window.addEventListener("firebaseReady", () => {
+      console.log("[v0] Otrzymano event firebaseReady")
+      initializeApp()
+    })
+
+    // Fallback - spróbuj po 2 sekundach
+    setTimeout(() => {
+      if (!appInitialized) {
+        console.log("[v0] Fallback inicjalizacji po timeout")
+        initializeApp()
+      }
+    }, 2000)
   }
 })
 
@@ -219,8 +237,7 @@ function switchLanguage(lang) {
   document.querySelectorAll(".hidden-lang").forEach((el) => el.classList.remove("hidden-lang"))
   document.querySelectorAll(`[data-lang]:not([data-lang="${lang}"])`).forEach((el) => el.classList.add("hidden-lang"))
 
-  // Update calendar if it's generated
-  if (document.getElementById("calendar-month-year").textContent) {
+  if (appInitialized) {
     generateCalendar()
   }
 
@@ -234,13 +251,27 @@ function toggleMobileMenu() {
 }
 
 async function generateCalendar() {
-  console.log("[v0] Generating calendar...")
+  console.log("[v0] Generowanie kalendarza...")
+
+  const monthYearElement = document.getElementById("calendar-month-year")
+  const calendarDays = document.getElementById("calendar-days")
+
+  if (!monthYearElement || !calendarDays) {
+    console.log("[v0] Elementy kalendarza jeszcze nie gotowe, spróbuj ponownie...")
+    setTimeout(() => generateCalendar(), 500)
+    return
+  }
 
   try {
-    bookedSlots = await getBookedSlots()
-    console.log("[v0] Loaded booked slots:", bookedSlots)
+    if (db) {
+      bookedSlots = await getBookedSlots()
+      console.log("[v0] Załadowano zajęte terminy:", bookedSlots)
+    } else {
+      console.log("[v0] Firebase nie gotowy, używam pustych terminów")
+      bookedSlots = {}
+    }
   } catch (error) {
-    console.error("[v0] Error loading booked slots:", error)
+    console.error("[v0] Błąd ładowania zajętych terminów:", error)
     bookedSlots = {}
   }
 
@@ -279,18 +310,9 @@ async function generateCalendar() {
           "December",
         ]
 
-  const monthYearElement = document.getElementById("calendar-month-year")
-  if (monthYearElement) {
-    monthYearElement.textContent = `${monthNames[month]} ${year}`
-  }
+  monthYearElement.textContent = `${monthNames[month]} ${year}`
 
   // Clear previous calendar
-  const calendarDays = document.getElementById("calendar-days")
-  if (!calendarDays) {
-    console.error("[v0] Calendar days element not found")
-    return
-  }
-
   calendarDays.innerHTML = ""
 
   // Get first day of month and number of days
@@ -325,7 +347,7 @@ async function generateCalendar() {
     calendarDays.appendChild(dayElement)
   }
 
-  console.log("[v0] Calendar generated successfully")
+  console.log("[v0] Kalendarz wygenerowany pomyślnie")
 }
 
 function previousMonth() {
@@ -421,6 +443,8 @@ function updateBookingSummary() {
 function updateBookingButton() {
   const submitButton = document.getElementById("booking-submit")
 
+  if (!submitButton) return
+
   if (selectedDate && selectedTime) {
     submitButton.disabled = false
     submitButton.className =
@@ -434,43 +458,19 @@ function updateBookingButton() {
   }
 }
 
-const observerOptions = {
-  threshold: 0.1,
-  rootMargin: "0px 0px -50px 0px",
-}
-
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry, index) => {
-    if (entry.isIntersecting) {
-      // Add staggered delay for multiple elements
-      setTimeout(() => {
-        entry.target.classList.add("animate-slide-up")
-        entry.target.classList.add("revealed")
-      }, index * 100)
-    }
-  })
-}, observerOptions)
-
-const sectionObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add("revealed")
-    }
-  })
-}, observerOptions)
-
 async function submitBooking(event) {
   event.preventDefault()
-  console.log("[v0] Submit booking called")
+  console.log("[v0] Wysyłanie rezerwacji...")
 
   if (!selectedDate || !selectedTime) {
-    console.log("[v0] No date or time selected")
+    console.log("[v0] Brak wybranej daty lub czasu")
+    alert("Wybierz datę i czas przed wysłaniem formularza.")
     return
   }
 
   if (!db) {
-    console.error("[v0] Database not initialized")
-    alert("Database niet geïnitialiseerd. Vernieuw de pagina en probeer opnieuw.")
+    console.error("[v0] Baza danych nie zainicjalizowana")
+    alert("Baza danych nie jest gotowa. Odśwież stronę i spróbuj ponownie.")
     return
   }
 
@@ -481,7 +481,7 @@ async function submitBooking(event) {
   submitButton.textContent = ""
 
   try {
-    console.log("[v0] Getting form data...")
+    console.log("[v0] Pobieranie danych formularza...")
     // Get form data
     const name = document.getElementById("booking-name").value
     const email = document.getElementById("booking-email").value
@@ -489,7 +489,7 @@ async function submitBooking(event) {
     const type = document.getElementById("booking-type").value
     const notes = document.getElementById("booking-notes").value
 
-    console.log("[v0] Form data:", { name, email, phone, type, notes })
+    console.log("[v0] Dane formularza:", { name, email, phone, type, notes })
 
     // Create booking object
     const booking = {
@@ -503,19 +503,13 @@ async function submitBooking(event) {
       created: new Date().toISOString(),
     }
 
-    console.log("[v0] Booking object:", booking)
-    console.log("[v0] Attempting to save booking...")
-
-    console.log("[v0] Firebase functions check:", {
-      db: !!db,
-      firebaseAddDoc: typeof window.firebaseAddDoc,
-      firebaseCollection: typeof window.firebaseCollection,
-    })
+    console.log("[v0] Obiekt rezerwacji:", booking)
+    console.log("[v0] Próba zapisania rezerwacji...")
 
     // Save booking to Firebase
     await saveBooking(booking)
 
-    console.log("[v0] Booking saved successfully!")
+    console.log("[v0] Rezerwacja zapisana pomyślnie!")
 
     // Remove loading animation
     submitButton.classList.remove("loading")
@@ -548,20 +542,18 @@ async function submitBooking(event) {
       document.getElementById("booking-success").scrollIntoView({ behavior: "smooth" })
     }, 400)
   } catch (error) {
-    console.error("[v0] Error submitting booking:", error)
-    console.error("[v0] Error details:", error.message, error.stack)
+    console.error("[v0] Błąd wysyłania rezerwacji:", error)
+    console.error("[v0] Szczegóły błędu:", error.message, error.stack)
 
-    let errorMessage = "Er is een fout opgetreden bij het opslaan van uw afspraak."
+    let errorMessage = "Wystąpił błąd podczas zapisywania rezerwacji."
     if (error.message.includes("permission")) {
-      errorMessage += " Controleer de Firebase beveiligingsregels."
+      errorMessage += " Problem z uprawnieniami Firebase."
     } else if (error.message.includes("network")) {
-      errorMessage += " Controleer uw internetverbinding."
+      errorMessage += " Sprawdź połączenie internetowe."
     }
-    errorMessage += " Probeer het opnieuw."
+    errorMessage += " Spróbuj ponownie."
 
-    alert(
-      currentLanguage === "nl" ? errorMessage : "An error occurred while saving your appointment. Please try again.",
-    )
+    alert(errorMessage)
 
     // Remove loading animation
     submitButton.classList.remove("loading")
@@ -613,12 +605,8 @@ async function handleContactForm(event) {
       }, 5000)
     }
   } catch (error) {
-    console.error("[v0] Error submitting contact form:", error)
-    alert(
-      currentLanguage === "nl"
-        ? "Er is een fout opgetreden bij het verzenden van uw bericht. Probeer het opnieuw."
-        : "An error occurred while sending your message. Please try again.",
-    )
+    console.error("[v0] Błąd wysyłania formularza kontaktowego:", error)
+    alert("Wystąpił błąd podczas wysyłania wiadomości. Spróbuj ponownie.")
 
     // Remove loading animation
     submitButton.classList.remove("loading")
@@ -659,25 +647,48 @@ async function cancelAppointment(event) {
     } else {
       alert(
         currentLanguage === "nl"
-          ? "Geen afspraak gevonden met dit e-mailadres."
+          ? "Nie znaleziono rezerwacji z tym adresem e-mail."
           : "No appointment found with this email address.",
       )
     }
   } catch (error) {
-    console.error("[v0] Error cancelling appointment:", error)
-    alert(
-      currentLanguage === "nl"
-        ? "Er is een fout opgetreden bij het annuleren van uw afspraak. Probeer het opnieuw."
-        : "An error occurred while cancelling your appointment. Please try again.",
-    )
+    console.error("[v0] Błąd anulowania rezerwacji:", error)
+    alert("Wystąpił błąd podczas anulowania rezerwacji. Spróbuj ponownie.")
   }
 }
 
+const observerOptions = {
+  threshold: 0.1,
+  rootMargin: "0px 0px -50px 0px",
+}
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, index) => {
+    if (entry.isIntersecting) {
+      // Add staggered delay for multiple elements
+      setTimeout(() => {
+        entry.target.classList.add("animate-slide-up")
+        entry.target.classList.add("revealed")
+      }, index * 100)
+    }
+  })
+}, observerOptions)
+
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add("revealed")
+    }
+  })
+}, observerOptions)
+
 // Observe elements for animation
 document.addEventListener("DOMContentLoaded", () => {
-  const animateElements = document.querySelectorAll(".service-card, .animate-slide-up")
-  animateElements.forEach((el) => observer.observe(el))
+  setTimeout(() => {
+    const animateElements = document.querySelectorAll(".service-card, .animate-slide-up")
+    animateElements.forEach((el) => observer.observe(el))
 
-  const sectionElements = document.querySelectorAll(".section-reveal")
-  sectionElements.forEach((el) => sectionObserver.observe(el))
+    const sectionElements = document.querySelectorAll(".section-reveal")
+    sectionElements.forEach((el) => sectionObserver.observe(el))
+  }, 1000)
 })
