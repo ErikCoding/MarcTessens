@@ -83,6 +83,14 @@
         window.firebaseDb = firebaseDb;
         
         console.log("[v0] Firebase initialized for admin panel");
+
+    window.showLoading = function() {
+    document.getElementById('loading-overlay').classList.remove('hidden');
+}
+
+window.hideLoading = function() {
+    document.getElementById('loading-overlay').classList.add('hidden');
+}
     </script>
 </head>
 <body class="font-source bg-gray-50 text-gray-700">
@@ -385,19 +393,9 @@
     </div>
 
     <script type="module">
-        import { 
-            collection, 
-            getDocs, 
-            doc, 
-            deleteDoc, 
-            query, 
-            where, 
-            orderBy,
-            onSnapshot 
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { ref, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Admin authentication
-        const ADMIN_PASSWORD = 'admin123'; // In production, this should be more secure
+        const ADMIN_PASSWORD = 'admin123';
         let isLoggedIn = false;
         let allBookings = [];
         let filteredBookings = [];
@@ -409,34 +407,26 @@
         function initializeFirebase() {
             if (window.firebaseDb) {
                 db = window.firebaseDb;
-                console.log("[v0] Firebase initialized for admin panel");
                 return true;
             }
-            console.error("[v0] Firebase not initialized for admin panel");
             return false;
         }
 
         async function initializeAdminPanel() {
             console.log("[v0] Initializing admin panel...");
-            
-            // Wait for Firebase to be ready
             let attempts = 0;
             const maxAttempts = 50;
-            
+
             while (!initializeFirebase() && attempts < maxAttempts) {
-                console.log(`[v0] Waiting for Firebase... attempt ${attempts + 1}/${maxAttempts}`);
                 await new Promise(resolve => setTimeout(resolve, 200));
                 attempts++;
             }
-            
-            if (attempts >= maxAttempts) {
-                console.error("[v0] Firebase initialization timeout");
+            if (!db) {
                 alert("Błąd ładowania panelu admina. Odśwież stronę i spróbuj ponownie.");
                 return;
             }
-            
             console.log("[v0] Firebase ready, loading data...");
-            await loadAllData();
+            await loadDashboard();
         }
 
         async function loadBookingsFromFirebase() {
