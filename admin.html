@@ -1,78 +1,29 @@
 <!DOCTYPE html>
-<html lang="nl" class="scroll-smooth">
+<html lang="pl" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Marc Tessens</title>
+    <title>Admin Panel - Marc Tessens</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #166534;
-            --primary-foreground: #ffffff;
-            --secondary: #15803d;
-            --accent: #15803d;
-            --background: #ffffff;
-            --foreground: #374151;
-            --card: #f0fdf4;
-            --muted: #f0fdf4;
-            --border: #e5e7eb;
-        }
-        
-        .font-playfair { font-family: 'Playfair Display', serif; }
-        .font-source { font-family: 'Source Sans Pro', sans-serif; }
-        
-        .admin-card {
-            transition: all 0.3s ease;
-        }
-        
-        .admin-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        
-        .booking-row {
-            transition: background-color 0.2s ease;
-        }
-        
-        .booking-row:hover {
-            background-color: #f0fdf4;
-        }
-        
-        .status-upcoming {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-        
-        .status-past {
-            background-color: #f3f4f6;
-            color: #6b7280;
-        }
-        
-        .status-today {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
     
-    <!-- Added Firebase SDK for admin panel -->
+    <!-- Enhanced Firebase configuration with real-time listeners -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, get, onValue, off } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, get, onValue, off, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         
         // Your web app's Firebase configuration
-        // UWAGA: Zastąp te wartości swoimi danymi z Firebase Console
         const firebaseConfig = {
-  apiKey: "AIzaSyBFPLvEIK5B48Ldm44bMjGPVyCPbOfrANg",
-  authDomain: "marc-tessens.firebaseapp.com",
-  databaseURL: "https://marc-tessens-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "marc-tessens",
-  storageBucket: "marc-tessens.firebasestorage.app",
-  messagingSenderId: "121454227452",
-  appId: "1:121454227452:web:a2756542378505f8a08c79"
-};
+            apiKey: "AIzaSyBFPLvEIK5B48Ldm44bMjGPVyCPbOfrANg",
+            authDomain: "marc-tessens.firebaseapp.com",
+            databaseURL: "https://marc-tessens-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "marc-tessens",
+            storageBucket: "marc-tessens.firebasestorage.app",
+            messagingSenderId: "121454227452",
+            appId: "1:121454227452:web:a2756542378505f8a08c79"
+        };
         
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -81,62 +32,58 @@
         // Make Firebase available globally
         window.firebaseApp = app;
         window.firebaseDb = firebaseDb;
+        window.firebaseRef = ref;
+        window.firebaseGet = get;
+        window.firebaseOnValue = onValue;
+        window.firebaseOff = off;
+        window.firebaseRemove = remove;
         
         console.log("[v0] Firebase initialized for admin panel");
-
-    window.showLoading = function() {
-    document.getElementById('loading-overlay').classList.remove('hidden');
-}
-
-window.hideLoading = function() {
-    document.getElementById('loading-overlay').classList.add('hidden');
-}
+        
+        // Notify that Firebase is ready
+        window.dispatchEvent(new CustomEvent('firebaseAdminReady'));
     </script>
 </head>
 <body class="font-source bg-gray-50 text-gray-700">
-    <!-- Added loading overlay for Firebase operations -->
+    <!-- Loading overlay -->
     <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-lg text-center">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-800 mx-auto mb-4"></div>
-            <p class="text-gray-700">Bezig met laden...</p>
+            <p class="text-gray-700">Ładowanie...</p>
         </div>
     </div>
 
-    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-green-50">
-        <div class="max-w-md w-full mx-4">
-            <div class="bg-white p-8 rounded-lg shadow-lg">
-                <div class="text-center mb-8">
-                    <h1 class="font-playfair text-3xl font-bold text-green-800 mb-2">Admin Dashboard</h1>
-                    <p class="text-gray-600">Marc Tessens - Boekhouding</p>
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="font-playfair text-3xl font-bold text-green-800 mb-2">Admin Panel</h1>
+                <p class="text-gray-600">Marc Tessens Boekhouding</p>
+            </div>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Gebruikersnaam</label>
+                    <input type="text" id="admin-username" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="admin">
                 </div>
                 
-                <form onsubmit="adminLogin(event)" class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Wachtwoord
-                        </label>
-                        <input type="password" id="admin-password" required 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                               placeholder="Voer admin wachtwoord in">
-                    </div>
-                    
-                    <button type="submit" 
-                            class="w-full bg-green-800 hover:bg-green-900 text-white font-semibold py-3 rounded-lg transition-colors">
-                        Inloggen
-                    </button>
-                </form>
-                
-                <div id="login-error" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-                    Onjuist wachtwoord. Probeer opnieuw.
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Wachtwoord</label>
+                    <input type="password" id="admin-password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="••••••••">
                 </div>
                 
-                <div class="mt-6 text-center text-sm text-gray-500">
-                    <p>Demo wachtwoord: <code class="bg-gray-100 px-2 py-1 rounded">admin123</code></p>
-                </div>
+                <button type="submit" class="w-full bg-green-800 hover:bg-green-900 text-white font-semibold py-3 rounded-lg transition-colors">
+                    Inloggen
+                </button>
+            </form>
+            
+            <div id="login-error" class="hidden mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                Ongeldige inloggegevens. Probeer opnieuw.
             </div>
         </div>
     </div>
 
+    <!-- Admin Dashboard -->
     <div id="admin-dashboard" class="hidden min-h-screen">
         <header class="bg-white shadow-sm border-b">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -146,18 +93,18 @@ window.hideLoading = function() {
                         <span class="ml-4 text-gray-500">Marc Tessens</span>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <!-- Added notification bell with badge -->
+                        <!-- Enhanced notification bell with real-time updates -->
                         <div class="relative">
                             <button onclick="toggleNotifications()" class="text-gray-500 hover:text-green-800 relative">
                                 <i class="fas fa-bell text-xl"></i>
-                                <span id="notification-badge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                                <span id="notification-badge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">0</span>
                             </button>
                             
-                            <!-- Notification dropdown -->
+                            <!-- Enhanced notification dropdown -->
                             <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
                                 <div class="p-4 border-b border-gray-200">
                                     <div class="flex justify-between items-center">
-                                        <h3 class="font-semibold text-gray-900">Meldingen</h3>
+                                        <h3 class="font-semibold text-gray-900">Live Meldingen</h3>
                                         <button onclick="markAllNotificationsRead()" class="text-sm text-green-600 hover:text-green-800">
                                             Alles markeren als gelezen
                                         </button>
@@ -174,7 +121,6 @@ window.hideLoading = function() {
                         <button onclick="refreshDashboard()" class="text-gray-500 hover:text-green-800">
                             <i class="fas fa-sync-alt"></i>
                         </button>
-                        <!-- Removed export button as requested -->
                         <button onclick="resetAllBookings()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm">
                             <i class="fas fa-trash-alt mr-2"></i>Reset
                         </button>
@@ -238,250 +184,193 @@ window.hideLoading = function() {
             </div>
 
             <div class="bg-white rounded-lg shadow mb-8">
-                <div class="border-b border-gray-200">
-                    <nav class="-mb-px flex">
-                        <button onclick="showTab('bookings')" id="bookings-tab" class="tab-button active py-4 px-6 text-sm font-medium border-b-2 border-green-600 text-green-600">
-                            <i class="fas fa-calendar-check mr-2"></i>Afspraken
-                        </button>
-                        <button onclick="showTab('messages')" id="messages-tab" class="tab-button py-4 px-6 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                            <i class="fas fa-envelope mr-2"></i>Berichten & Annuleringen
-                        </button>
-                    </nav>
-                </div>
-            </div>
-
-            <div class="bg-white p-6 rounded-lg shadow mb-8">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <div id="bookings-filters">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Filter op Status</label>
-                            <select id="status-filter" onchange="filterBookings()" 
-                                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600">
-                                <option value="all">Alle Afspraken</option>
-                                <option value="upcoming">Komende</option>
-                                <option value="past">Verleden</option>
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-semibold text-gray-900">Afspraken Beheer</h2>
+                        <div class="flex space-x-2">
+                            <select id="filter-status" onchange="filterBookings()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="all">Alle afspraken</option>
+                                <option value="upcoming">Komende afspraken</option>
                                 <option value="today">Vandaag</option>
-                            </select>
-                        </div>
-                        
-                        <div id="bookings-type-filter">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Filter op Type</label>
-                            <select id="type-filter" onchange="filterBookings()" 
-                                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600">
-                                <option value="all">Alle Types</option>
-                                <option value="startup">Startersadvies</option>
-                                <option value="bookkeeping">Boekhouding</option>
-                                <option value="tax">Fiscaal advies</option>
-                                <option value="payroll">Loonbeheer</option>
-                                <option value="other">Andere</option>
-                            </select>
-                        </div>
-                        
-                        <div id="messages-filters" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Filter op Type</label>
-                            <select id="message-type-filter" onchange="filterMessages()" 
-                                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600">
-                                <option value="all">Alle Berichten</option>
-                                <option value="contact">Contact Berichten</option>
-                                <option value="cancellation">Annuleringen</option>
+                                <option value="past">Voorbije afspraken</option>
                             </select>
                         </div>
                     </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum & Tijd</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Klant</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acties</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Bookings will be populated here -->
+                        </tbody>
+                    </table>
                     
-                    <div class="flex-1 max-w-md">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Zoeken</label>
-                        <div class="relative">
-                            <input type="text" id="search-input" onkeyup="performSearch()" 
-                                   placeholder="Zoek op naam, email of notities..."
-                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600">
-                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        </div>
+                    <div id="no-bookings" class="hidden p-8 text-center text-gray-500">
+                        <i class="fas fa-calendar-times text-4xl mb-4"></i>
+                        <p>Geen afspraken gevonden</p>
                     </div>
                 </div>
             </div>
 
-            <div id="bookings-content" class="tab-content">
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Afspraken Overzicht</h2>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Datum & Tijd
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Klant
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Contact
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Type
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Notities
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Acties
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200">
-                                <!-- Bookings will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div id="no-bookings" class="hidden text-center py-12">
-                        <i class="fas fa-calendar-times text-gray-400 text-4xl mb-4"></i>
-                        <p class="text-gray-500 text-lg">Geen afspraken gevonden</p>
-                        <p class="text-gray-400 text-sm">Afspraken gemaakt via de website verschijnen hier</p>
-                    </div>
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">Berichten</h2>
                 </div>
-            </div>
-
-            <div id="messages-content" class="tab-content hidden">
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Berichten & Annuleringen</h2>
-                    </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Van</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Onderwerp</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acties</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messages-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Messages will be populated here -->
+                        </tbody>
+                    </table>
                     
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Type
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Datum
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Van
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Onderwerp/Details
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Bericht
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Acties
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="messages-table-body" class="bg-white divide-y divide-gray-200">
-                                <!-- Messages will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div id="no-messages" class="hidden text-center py-12">
-                        <i class="fas fa-envelope-open text-gray-400 text-4xl mb-4"></i>
-                        <p class="text-gray-500 text-lg">Geen berichten gevonden</p>
-                        <p class="text-gray-400 text-sm">Contact berichten en annuleringen verschijnen hier</p>
+                    <div id="no-messages" class="hidden p-8 text-center text-gray-500">
+                        <i class="fas fa-envelope-open text-4xl mb-4"></i>
+                        <p>Geen berichten gevonden</p>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="booking-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Afspraak Details</h3>
-                <button onclick="closeBookingModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            
-            <div id="booking-modal-content" class="space-y-4">
-                <!-- Modal content will be populated here -->
-            </div>
-            
-            <div class="flex justify-end mt-6 space-x-3">
-                <button onclick="closeBookingModal()" 
-                        class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg">
-                    Sluiten
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script type="module">
-        import { ref, get, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const ADMIN_PASSWORD = 'admin123';
-        let isLoggedIn = false;
+    <script>
+        // Enhanced admin panel with real-time notifications
+        let db = null;
         let allBookings = [];
         let filteredBookings = [];
         let allMessages = [];
-        let filteredMessages = [];
-        let currentTab = 'bookings';
-        let db = null;
         let notifications = [];
-        let lastBookingCount = 0;
-        let lastMessageCount = 0;
         let bookingsListener = null;
         let messagesListener = null;
+        let lastBookingCount = 0;
+        let lastMessageCount = 0;
 
-        function initializeFirebase() {
-            if (window.firebaseDb) {
-                db = window.firebaseDb;
-                return true;
-            }
-            return false;
-        }
-
-        async function initializeAdminPanel() {
-            console.log("[v0] Initializing admin panel...");
-            let attempts = 0;
-            const maxAttempts = 50;
-
-            while (!initializeFirebase() && attempts < maxAttempts) {
-                await new Promise(resolve => setTimeout(resolve, 200));
-                attempts++;
-            }
-            if (!db) {
-                alert("Błąd ładowania panelu admina. Odśwież stronę i spróbuj ponownie.");
-                return;
-            }
-            console.log("[v0] Firebase ready, loading data...");
-            await loadDashboard();
-            initializeNotifications();
-        }
+        function initializeFirebaseAdmin() {
+    if (window.firebaseDb) {
+        db = window.firebaseDb; // <-- tu przypiszemy!
+        console.log("[v0] Firebase Admin initialized successfully!");
+        return true;
+    }
+    return false;
+}
 
         function initializeNotifications() {
-            // Set up real-time listeners for new bookings and messages
-            const bookingsRef = ref(db, "bookings");
-            const messagesRef = ref(db, "messages");
+            if (!db) {
+                console.error("[v0] Database not initialized for notifications");
+                return;
+            }
+
+            console.log("[v0] Initializing real-time notifications...");
             
-            bookingsListener = onValue(bookingsRef, (snapshot) => {
+            // Set up real-time listeners for new bookings
+            const bookingsRef = window.firebaseRef(db, "bookings");
+            bookingsListener = window.firebaseOnValue(bookingsRef, (snapshot) => {
                 if (snapshot.exists()) {
-                    const bookings = Object.keys(snapshot.val()).length;
-                    if (lastBookingCount > 0 && bookings > lastBookingCount) {
-                        addNotification('booking', `Nieuwe afspraak ontvangen!`, 'fas fa-calendar-plus', 'bg-green-100 text-green-800');
+                    const bookingsData = snapshot.val();
+                    const currentBookingCount = Object.keys(bookingsData).length;
+                    
+                    // Check for new bookings
+                    if (lastBookingCount > 0 && currentBookingCount > lastBookingCount) {
+                        const newBookings = Object.entries(bookingsData)
+                            .slice(-1) // Get the last booking
+                            .map(([id, booking]) => ({ id, ...booking }));
+                        
+                        newBookings.forEach(booking => {
+                            addNotification(
+                                'booking', 
+                                `Nieuwe afspraak: ${booking.name} op ${formatDate(booking.date)} om ${booking.time}`, 
+                                'fas fa-calendar-plus', 
+                                'bg-green-100 text-green-800'
+                            );
+                        });
+                        
+                        // Play notification sound
+                        playNotificationSound();
                     }
-                    lastBookingCount = bookings;
+                    
+                    lastBookingCount = currentBookingCount;
+                    
+                    // Update bookings data
+                    allBookings = Object.entries(bookingsData).map(([id, booking]) => ({ id, ...booking }));
+                    filterBookings();
+                    updateStats();
                 }
             });
             
-            messagesListener = onValue(messagesRef, (snapshot) => {
+            // Set up real-time listeners for new messages
+            const messagesRef = window.firebaseRef(db, "messages");
+            messagesListener = window.firebaseOnValue(messagesRef, (snapshot) => {
                 if (snapshot.exists()) {
-                    const messages = Object.keys(snapshot.val()).length;
-                    if (lastMessageCount > 0 && messages > lastMessageCount) {
-                        addNotification('message', `Nieuw bericht ontvangen!`, 'fas fa-envelope', 'bg-blue-100 text-blue-800');
+                    const messagesData = snapshot.val();
+                    const currentMessageCount = Object.keys(messagesData).length;
+                    
+                    // Check for new messages
+                    if (lastMessageCount > 0 && currentMessageCount > lastMessageCount) {
+                        const newMessages = Object.entries(messagesData)
+                            .slice(-1) // Get the last message
+                            .map(([id, message]) => ({ id, ...message }));
+                        
+                        newMessages.forEach(message => {
+                            if (message.type === 'contact') {
+                                addNotification(
+                                    'message', 
+                                    `Nieuw bericht van ${message.name}: ${message.subject}`, 
+                                    'fas fa-envelope', 
+                                    'bg-blue-100 text-blue-800'
+                                );
+                            } else if (message.type === 'cancellation') {
+                                addNotification(
+                                    'cancellation', 
+                                    `Afspraak geannuleerd: ${message.originalBooking?.name || 'Onbekend'}`, 
+                                    'fas fa-calendar-times', 
+                                    'bg-red-100 text-red-800'
+                                );
+                            }
+                        });
+                        
+                        // Play notification sound
+                        playNotificationSound();
                     }
-                    lastMessageCount = messages;
+                    
+                    lastMessageCount = currentMessageCount;
+                    
+                    // Update messages data
+                    allMessages = Object.entries(messagesData).map(([id, message]) => ({ id, ...message }));
+                    renderMessagesTable();
+                    updateStats();
                 }
             });
+            
+            console.log("[v0] Real-time notifications initialized!");
+        }
+
+        function playNotificationSound() {
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+                audio.volume = 0.3;
+                audio.play().catch(e => console.log('Could not play notification sound:', e));
+            } catch (e) {
+                console.log('Notification sound not available:', e);
+            }
         }
 
         function addNotification(type, message, icon, colorClass) {
@@ -496,6 +385,12 @@ window.hideLoading = function() {
             };
             
             notifications.unshift(notification);
+            
+            // Keep only last 50 notifications
+            if (notifications.length > 50) {
+                notifications = notifications.slice(0, 50);
+            }
+            
             updateNotificationBadge();
             renderNotifications();
             
@@ -503,7 +398,8 @@ window.hideLoading = function() {
             if (Notification.permission === 'granted') {
                 new Notification('Marc Tessens Admin', {
                     body: message,
-                    icon: '/favicon.ico'
+                    icon: '/favicon.ico',
+                    tag: 'admin-notification'
                 });
             }
         }
@@ -524,22 +420,15 @@ window.hideLoading = function() {
             const notificationList = document.getElementById('notification-list');
             
             if (notifications.length === 0) {
-                notificationList.innerHTML = `
-                    <div class="p-4 text-center text-gray-500">
-                        Geen nieuwe meldingen
-                    </div>
-                `;
+                notificationList.innerHTML = '<div class="p-4 text-center text-gray-500">Geen nieuwe meldingen</div>';
                 return;
             }
             
-            notificationList.innerHTML = notifications.slice(0, 10).map(notification => `
-                <div class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${notification.read ? 'opacity-60' : ''}" 
-                     onclick="markNotificationRead('${notification.id}')">
-                    <div class="flex items-start space-x-3">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-full ${notification.colorClass} flex items-center justify-center">
-                                <i class="${notification.icon} text-sm"></i>
-                            </div>
+            notificationList.innerHTML = notifications.map(notification => `
+                <div class="p-4 border-b border-gray-100 hover:bg-gray-50 ${notification.read ? 'opacity-60' : ''}" onclick="markNotificationRead(${notification.id})">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 ${notification.colorClass} p-2 rounded-lg mr-3">
+                            <i class="${notification.icon}"></i>
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-gray-900">${notification.message}</p>
@@ -589,179 +478,144 @@ window.hideLoading = function() {
             renderNotifications();
         }
 
-        // Close notification dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('notification-dropdown');
-            const button = event.target.closest('[onclick="toggleNotifications()"]');
-            
-            if (!button && !dropdown.contains(event.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
-
-        async function loadBookingsFromFirebase() {
-            try {
-                showLoading();
-                
-                if (!db) {
-                    console.error("[v0] Database not initialized");
-                    return [];
-                }
-                
-                const bookingsRef = ref(db, "bookings");
-                const snapshot = await get(bookingsRef);
-                const bookings = [];
-                
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    Object.entries(data).forEach(([id, bookingData]) => {
-                        bookings.push({
-                            id: id,
-                            ...bookingData
-                        });
-                    });
-                }
-                
-                return bookings;
-            } catch (error) {
-                console.error("[v0] Error loading bookings:", error);
-                return [];
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function loadMessagesFromFirebase() {
-            try {
-                showLoading();
-                
-                if (!db) {
-                    console.error("[v0] Database not initialized");
-                    return [];
-                }
-                
-                const messagesRef = ref(db, "messages");
-                const snapshot = await get(messagesRef);
-                const messages = [];
-                
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    Object.entries(data).forEach(([id, messageData]) => {
-                        messages.push({
-                            id: id,
-                            ...messageData
-                        });
-                    });
-                }
-                
-                return messages;
-            } catch (error) {
-                console.error("[v0] Error loading messages:", error);
-                return [];
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function deleteBookingFromFirebase(bookingId) {
-            try {
-                showLoading();
-                const bookingRef = ref(db, `bookings/${bookingId}`);
-                await remove(bookingRef);
-                return true;
-            } catch (error) {
-                console.error("[v0] Error deleting booking:", error);
-                return false;
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function deleteMessageFromFirebase(messageId) {
-            try {
-                showLoading();
-                const messageRef = ref(db, `messages/${messageId}`);
-                await remove(messageRef);
-                return true;
-            } catch (error) {
-                console.error("[v0] Error deleting message:", error);
-                return false;
-            } finally {
-                hideLoading();
-            }
-        }
-
-        window.adminLogin = function(event) {
-            event.preventDefault();
-            const password = document.getElementById('admin-password').value;
-            
-            if (password === ADMIN_PASSWORD) {
-                isLoggedIn = true;
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('admin-dashboard').classList.remove('hidden');
-                loadDashboard();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-                document.getElementById('admin-password').value = '';
-            }
-        }
-
-        window.adminLogout = function() {
-            isLoggedIn = false;
-            if (bookingsListener) {
-                off(ref(db, "bookings"), 'value', bookingsListener);
-            }
-            if (messagesListener) {
-                off(ref(db, "messages"), 'value', messagesListener);
-            }
-            
-            document.getElementById('admin-dashboard').classList.add('hidden');
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('admin-password').value = '';
-            document.getElementById('login-error').classList.add('hidden');
-        }
-
-        window.loadDashboard = async function() {
-            // Wait for Firebase to be available
-            let attempts = 0;
-            while (!window.firebaseDb && attempts < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
-            }
-
-            if (!initializeFirebase()) {
-                alert('Fout bij het laden van Firebase. Probeer de pagina te vernieuwen.');
-                return;
-            }
-
-            // Load data from Firebase
-            allBookings = await loadBookingsFromFirebase();
-            filteredBookings = [...allBookings];
-            
-            allMessages = await loadMessagesFromFirebase();
-            filteredMessages = [...allMessages];
-            
-            lastBookingCount = allBookings.length;
-            lastMessageCount = allMessages.length;
-            
-            updateStats();
-            renderBookingsTable();
-            renderMessagesTable();
-        }
-
         window.formatDate = function(dateString) {
-            const date = new Date(dateString + 'T00:00:00');
+            const [year, month, day] = dateString.split('-');
+            const date = new Date(year, month - 1, day);
             const options = { 
                 weekday: 'short', 
                 year: 'numeric', 
                 month: 'short', 
-                day: 'numeric',
-                timeZone: 'Europe/Brussels'
+                day: 'numeric'
             };
             return date.toLocaleDateString('nl-NL', options);
         }
 
-        window.renderBookingsTable = function() {
+
+        // Initialize admin panel
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[v0] Admin panel DOM loaded");
+            
+            // Login form handler
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('admin-username').value;
+                const password = document.getElementById('admin-password').value;
+                
+                // Simple authentication (in production, use proper authentication)
+                if (username === 'admin' && password === 'marc2024') {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('admin-dashboard').classList.remove('hidden');
+                    
+                    // Initialize Firebase and load data
+                    if (initializeFirebaseAdmin()) {
+    initializeNotifications();
+    loadDashboardData();
+} else {
+    window.addEventListener('firebaseAdminReady', () => {
+        if (initializeFirebaseAdmin()) {
+            initializeNotifications();
+            loadDashboardData();
+        }
+    });
+}
+                } else {
+                    document.getElementById('login-error').classList.remove('hidden');
+                }
+            });
+        });
+
+        async function loadDashboardData() {
+            try {
+                showLoading();
+                
+                // Load bookings
+                const bookingsRef = window.firebaseRef(db, "bookings");
+                const bookingsSnapshot = await window.firebaseGet(bookingsRef);
+                
+                if (bookingsSnapshot.exists()) {
+                    const bookingsData = bookingsSnapshot.val();
+                    allBookings = Object.entries(bookingsData).map(([id, booking]) => ({ id, ...booking }));
+                    lastBookingCount = allBookings.length;
+                } else {
+                    allBookings = [];
+                    lastBookingCount = 0;
+                }
+                
+                // Load messages
+                const messagesRef = window.firebaseRef(db, "messages");
+                const messagesSnapshot = await window.firebaseGet(messagesRef);
+                
+                if (messagesSnapshot.exists()) {
+                    const messagesData = messagesSnapshot.val();
+                    allMessages = Object.entries(messagesData).map(([id, message]) => ({ id, ...message }));
+                    lastMessageCount = allMessages.length;
+                } else {
+                    allMessages = [];
+                    lastMessageCount = 0;
+                }
+                
+                // Update UI
+                filterBookings();
+                renderMessagesTable();
+                updateStats();
+                
+            } catch (error) {
+                console.error("[v0] Error loading dashboard data:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function updateStats() {
+            const today = new Date();
+            const todayString = today.getFullYear() + '-' + 
+                String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(today.getDate()).padStart(2, '0');
+            
+            const upcomingBookings = allBookings.filter(booking => {
+                const bookingDate = new Date(booking.date + 'T' + booking.time);
+                return bookingDate > today;
+            });
+            
+            const todayBookings = allBookings.filter(booking => booking.date === todayString);
+            
+            document.getElementById('total-bookings').textContent = allBookings.length;
+            document.getElementById('upcoming-bookings').textContent = upcomingBookings.length;
+            document.getElementById('today-bookings').textContent = todayBookings.length;
+            document.getElementById('total-messages').textContent = allMessages.length;
+        }
+
+        function filterBookings() {
+            const filterStatus = document.getElementById('filter-status').value;
+            const today = new Date();
+            const todayString = today.getFullYear() + '-' + 
+                String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(today.getDate()).padStart(2, '0');
+            
+            switch (filterStatus) {
+                case 'upcoming':
+                    filteredBookings = allBookings.filter(booking => {
+                        const bookingDate = new Date(booking.date + 'T' + booking.time);
+                        return bookingDate > today;
+                    });
+                    break;
+                case 'today':
+                    filteredBookings = allBookings.filter(booking => booking.date === todayString);
+                    break;
+                case 'past':
+                    filteredBookings = allBookings.filter(booking => {
+                        const bookingDate = new Date(booking.date + 'T' + booking.time);
+                        return bookingDate < today;
+                    });
+                    break;
+                default:
+                    filteredBookings = [...allBookings];
+            }
+            
+            renderBookingsTable();
+        }
+
+        function renderBookingsTable() {
             const tbody = document.getElementById('bookings-table-body');
             const noBookings = document.getElementById('no-bookings');
             
@@ -783,64 +637,50 @@ window.hideLoading = function() {
             tbody.innerHTML = sortedBookings.map(booking => {
                 const bookingDateTime = new Date(booking.date + 'T' + booking.time);
                 const now = new Date();
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const bookingDate = new Date(booking.date + 'T00:00:00');
+                const isPast = bookingDateTime < now;
+                const isToday = booking.date === now.getFullYear() + '-' + 
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(now.getDate()).padStart(2, '0');
                 
-                let statusClass = 'status-past';
-                let statusText = 'Verleden';
+                let statusClass = 'bg-green-100 text-green-800';
+                let statusText = 'Gepland';
                 
-                if (bookingDate.toDateString() === today.toDateString()) {
-                    statusClass = 'status-today';
+                if (isPast) {
+                    statusClass = 'bg-gray-100 text-gray-800';
+                    statusText = 'Voltooid';
+                } else if (isToday) {
+                    statusClass = 'bg-blue-100 text-blue-800';
                     statusText = 'Vandaag';
-                } else if (bookingDateTime > now) {
-                    statusClass = 'status-upcoming';
-                    statusText = 'Komend';
                 }
                 
-                const typeLabels = {
-                    'startup': 'Startersadvies',
-                    'bookkeeping': 'Boekhouding',
-                    'tax': 'Fiscaal advies',
-                    'payroll': 'Loonbeheer',
-                    'other': 'Andere'
-                };
-                
                 return `
-                    <tr class="booking-row">
+                    <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">
-                                ${statusText}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">
-                                ${formatDate(booking.date)}
-                            </div>
+                            <div class="text-sm font-medium text-gray-900">${formatDate(booking.date)}</div>
                             <div class="text-sm text-gray-500">${booking.time}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">${booking.name}</div>
+                            <div class="text-sm text-gray-500">${booking.email}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${booking.email}</div>
-                            ${booking.phone ? `<div class="text-sm text-gray-500">${booking.phone}</div>` : ''}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                ${getBookingTypeText(booking.type)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${booking.phone || 'Niet opgegeven'}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm text-gray-900">${typeLabels[booking.type] || booking.type}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900 max-w-xs truncate">
-                                ${booking.notes || '-'}
-                            </div>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                                ${statusText}
+                            </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button onclick="viewBookingDetails('${booking.id}')" 
-                                    class="text-green-700 hover:text-green-900 mr-3">
+                            <button onclick="viewBookingDetails('${booking.id}')" class="text-green-600 hover:text-green-900 mr-3">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="deleteBooking('${booking.id}')" 
-                                    class="text-red-600 hover:text-red-900">
+                            <button onclick="deleteBooking('${booking.id}')" class="text-red-600 hover:text-red-900">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -849,178 +689,11 @@ window.hideLoading = function() {
             }).join('');
         }
 
-        window.filterBookings = function() {
-            const statusFilter = document.getElementById('status-filter').value;
-            const typeFilter = document.getElementById('type-filter').value;
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            
-            filteredBookings = allBookings.filter(booking => {
-                // Status filter
-                const bookingDateTime = new Date(booking.date + 'T' + booking.time);
-                const now = new Date();
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const bookingDate = new Date(booking.date + 'T00:00:00');
-                
-                let matchesStatus = true;
-                if (statusFilter === 'upcoming') {
-                    matchesStatus = bookingDateTime > now;
-                } else if (statusFilter === 'past') {
-                    matchesStatus = bookingDateTime < now;
-                } else if (statusFilter === 'today') {
-                    matchesStatus = bookingDate.toDateString() === today.toDateString();
-                }
-                
-                // Type filter
-                const matchesType = typeFilter === 'all' || booking.type === typeFilter;
-                
-                // Search filter
-                const matchesSearch = searchTerm === '' || 
-                    booking.name.toLowerCase().includes(searchTerm) ||
-                    booking.email.toLowerCase().includes(searchTerm) ||
-                    (booking.notes && booking.notes.toLowerCase().includes(searchTerm));
-                
-                return matchesStatus && matchesType && matchesSearch;
-            });
-            
-            renderBookingsTable();
-        }
-
-        window.viewBookingDetails = function(bookingId) {
-            const booking = allBookings.find(b => b.id === bookingId);
-            if (!booking) return;
-            
-            const typeLabels = {
-                'startup': 'Startersadvies',
-                'bookkeeping': 'Boekhouding',
-                'tax': 'Fiscaal advies',
-                'payroll': 'Loonbeheer',
-                'other': 'Andere'
-            };
-            
-            const modalContent = document.getElementById('booking-modal-content');
-            modalContent.innerHTML = `
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div>
-                        <h4 class="font-semibold text-gray-900 mb-3">Klant Informatie</h4>
-                        <div class="space-y-2">
-                            <p><span class="font-medium">Naam:</span> ${booking.name}</p>
-                            <p><span class="font-medium">Email:</span> ${booking.email}</p>
-                            ${booking.phone ? `<p><span class="font-medium">Telefoon:</span> ${booking.phone}</p>` : ''}
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h4 class="font-semibold text-gray-900 mb-3">Afspraak Details</h4>
-                        <div class="space-y-2">
-                            <p><span class="font-medium">Datum:</span> ${formatDate(booking.date)}</p>
-                            <p><span class="font-medium">Tijd:</span> ${booking.time}</p>
-                            <p><span class="font-medium">Type:</span> ${typeLabels[booking.type] || booking.type}</p>
-                        </div>
-                    </div>
-                </div>
-                
-                ${booking.notes ? `
-                    <div class="mt-6">
-                        <h4 class="font-semibold text-gray-900 mb-3">Aanvullende Informatie</h4>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-gray-700">${booking.notes}</p>
-                        </div>
-                    </div>
-                ` : ''}
-                
-                <div class="mt-6 pt-4 border-t border-gray-200">
-                    <p class="text-sm text-gray-500">
-                        <span class="font-medium">Geboekt op:</span> 
-                        ${new Date(booking.created).toLocaleString('nl-NL')}
-                    </p>
-                </div>
-            `;
-            
-            document.getElementById('booking-modal').classList.remove('hidden');
-        }
-
-        window.closeBookingModal = function() {
-            document.getElementById('booking-modal').classList.add('hidden');
-        }
-
-        window.deleteBooking = async function(bookingId) {
-            if (!confirm('Weet u zeker dat u deze afspraak wilt verwijderen?')) {
-                return;
-            }
-            
-            const success = await deleteBookingFromFirebase(bookingId);
-            
-            if (success) {
-                // Remove from local arrays
-                allBookings = allBookings.filter(b => b.id !== bookingId);
-                filteredBookings = filteredBookings.filter(b => b.id !== bookingId);
-                updateStats();
-                renderBookingsTable();
-            } else {
-                alert('Fout bij het verwijderen van de afspraak. Probeer het opnieuw.');
-            }
-        }
-
-        window.showTab = function(tabName) {
-            currentTab = tabName;
-            
-            // Update tab buttons
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active', 'border-green-600', 'text-green-600');
-                btn.classList.add('border-transparent', 'text-gray-500');
-            });
-            
-            document.getElementById(tabName + '-tab').classList.add('active', 'border-green-600', 'text-green-600');
-            document.getElementById(tabName + '-tab').classList.remove('border-transparent', 'text-gray-500');
-            
-            // Show/hide content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
-            document.getElementById(tabName + '-content').classList.remove('hidden');
-            
-            // Show/hide filters
-            if (tabName === 'bookings') {
-                document.getElementById('bookings-filters').classList.remove('hidden');
-                document.getElementById('bookings-type-filter').classList.remove('hidden');
-                document.getElementById('messages-filters').classList.add('hidden');
-            } else {
-                document.getElementById('bookings-filters').classList.add('hidden');
-                document.getElementById('bookings-type-filter').classList.add('hidden');
-                document.getElementById('messages-filters').classList.remove('hidden');
-            }
-        }
-
-        window.updateStats = function() {
-            const now = new Date();
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const totalBookings = allBookings.length;
-            const upcomingBookings = allBookings.filter(booking => {
-                const bookingDate = new Date(booking.date + 'T' + booking.time);
-                return bookingDate > now;
-            }).length;
-            
-            const todayBookings = allBookings.filter(booking => {
-                const bookingDate = new Date(booking.date + 'T00:00:00');
-                return bookingDate.toDateString() === today.toDateString();
-            }).length;
-            
-            const totalMessages = allMessages.length;
-
-            document.getElementById('total-bookings').textContent = totalBookings;
-            document.getElementById('upcoming-bookings').textContent = upcomingBookings;
-            document.getElementById('today-bookings').textContent = todayBookings;
-            document.getElementById('total-messages').textContent = totalMessages;
-        }
-
-        window.renderMessagesTable = function() {
+        function renderMessagesTable() {
             const tbody = document.getElementById('messages-table-body');
             const noMessages = document.getElementById('no-messages');
             
-            if (filteredMessages.length === 0) {
+            if (allMessages.length === 0) {
                 tbody.innerHTML = '';
                 noMessages.classList.remove('hidden');
                 return;
@@ -1029,72 +702,37 @@ window.hideLoading = function() {
             noMessages.classList.add('hidden');
             
             // Sort messages by date (newest first)
-            const sortedMessages = [...filteredMessages].sort((a, b) => {
-                const dateA = new Date(a.created || a.cancelledAt);
-                const dateB = new Date(b.created || b.cancelledAt);
-                return dateB - dateA;
+            const sortedMessages = [...allMessages].sort((a, b) => {
+                return new Date(b.created) - new Date(a.created);
             });
             
             tbody.innerHTML = sortedMessages.map(message => {
-                const isContact = message.type === 'contact';
-                const isCancellation = message.type === 'cancellation';
-                
-                let typeIcon, typeText, typeClass;
-                if (isContact) {
-                    typeIcon = 'fas fa-envelope';
-                    typeText = 'Contact';
-                    typeClass = 'bg-blue-100 text-blue-800';
-                } else {
-                    typeIcon = 'fas fa-times-circle';
-                    typeText = 'Annulering';
-                    typeClass = 'bg-red-100 text-red-800';
-                }
-                
-                const date = new Date(message.created || message.cancelledAt);
-                const formattedDate = date.toLocaleDateString('nl-NL') + ' ' + date.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
-                
-                let subject, content, fromName, fromEmail;
-                
-                if (isContact) {
-                    subject = message.subject;
-                    content = message.message;
-                    fromName = message.name;
-                    fromEmail = message.email;
-                } else {
-                    const booking = message.originalBooking;
-                    subject = `Afspraak ${formatDate(booking.date)} ${booking.time}`;
-                    content = message.reason || 'Geen reden opgegeven';
-                    fromName = booking.name;
-                    fromEmail = booking.email;
-                }
+                const messageDate = new Date(message.created);
+                const typeClass = message.type === 'contact' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800';
+                const typeText = message.type === 'contact' ? 'Contact' : 'Annulering';
                 
                 return `
-                    <tr class="booking-row">
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${messageDate.toLocaleDateString('nl-NL')} ${messageDate.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full ${typeClass}">
-                                <i class="${typeIcon} mr-1"></i>${typeText}
+                            <div class="text-sm font-medium text-gray-900">${message.name || 'Systeem'}</div>
+                            <div class="text-sm text-gray-500">${message.email || ''}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">${message.subject || message.reason || 'Geen onderwerp'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${typeClass}">
+                                ${typeText}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${formattedDate}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">${fromName}</div>
-                            <div class="text-sm text-gray-500">${fromEmail}</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900 max-w-xs truncate">${subject}</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900 max-w-xs truncate">${content}</div>
-                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button onclick="viewMessageDetails('${message.id}')" 
-                                    class="text-green-700 hover:text-green-900 mr-3">
+                            <button onclick="viewMessageDetails('${message.id}')" class="text-green-600 hover:text-green-900 mr-3">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="deleteMessage('${message.id}')" 
-                                    class="text-red-600 hover:text-red-900">
+                            <button onclick="deleteMessage('${message.id}')" class="text-red-600 hover:text-red-900">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -1103,210 +741,143 @@ window.hideLoading = function() {
             }).join('');
         }
 
-        window.filterMessages = function() {
-            const typeFilter = document.getElementById('message-type-filter').value;
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            
-            filteredMessages = allMessages.filter(message => {
-                // Type filter
-                const matchesType = typeFilter === 'all' || message.type === typeFilter;
-                
-                // Search filter
-                let matchesSearch = false;
-                if (message.type === 'contact') {
-                    matchesSearch = searchTerm === '' || 
-                        message.name.toLowerCase().includes(searchTerm) ||
-                        message.email.toLowerCase().includes(searchTerm) ||
-                        message.subject.toLowerCase().includes(searchTerm) ||
-                        message.message.toLowerCase().includes(searchTerm);
-                } else if (message.type === 'cancellation') {
-                    const booking = message.originalBooking;
-                    matchesSearch = searchTerm === '' || 
-                        booking.name.toLowerCase().includes(searchTerm) ||
-                        booking.email.toLowerCase().includes(searchTerm) ||
-                        (message.reason && message.reason.toLowerCase().includes(searchTerm));
-                }
-                
-                return matchesType && matchesSearch;
-            });
-            
-            renderMessagesTable();
+        function getBookingTypeText(type) {
+            const types = {
+                'startup': 'Startersadvies',
+                'bookkeeping': 'Boekhouding',
+                'tax': 'Fiscaal Advies',
+                'payroll': 'Loonbeheer',
+                'other': 'Andere'
+            };
+            return types[type] || type;
         }
 
-        window.performSearch = function() {
-            if (currentTab === 'bookings') {
-                filterBookings();
-            } else {
-                filterMessages();
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // Global functions
+        window.refreshDashboard = function() {
+            loadDashboardData();
+        }
+
+        window.filterBookings = filterBookings;
+
+        window.adminLogout = function() {
+            // Clean up listeners
+            if (bookingsListener) {
+                window.firebaseOff(window.firebaseRef(db, "bookings"), bookingsListener);
+            }
+            if (messagesListener) {
+                window.firebaseOff(window.firebaseRef(db, "messages"), messagesListener);
+            }
+            
+            // Reset state
+            allBookings = [];
+            allMessages = [];
+            notifications = [];
+            
+            // Show login screen
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('admin-username').value = '';
+            document.getElementById('admin-password').value = '';
+        }
+
+        window.resetAllBookings = async function() {
+            if (confirm('Weet je zeker dat je alle afspraken wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.')) {
+                try {
+                    showLoading();
+                    const bookingsRef = window.firebaseRef(db, "bookings");
+                    await window.firebaseRemove(bookingsRef);
+                    
+                    const messagesRef = window.firebaseRef(db, "messages");
+                    await window.firebaseRemove(messagesRef);
+                    
+                    allBookings = [];
+                    allMessages = [];
+                    filteredBookings = [];
+                    notifications = [];
+                    lastBookingCount = 0;
+                    lastMessageCount = 0;
+                    
+                    renderBookingsTable();
+                    renderMessagesTable();
+                    updateStats();
+                    updateNotificationBadge();
+                    renderNotifications();
+                    
+                    alert('Alle data is succesvol verwijderd.');
+                } catch (error) {
+                    console.error('Error resetting data:', error);
+                    alert('Er is een fout opgetreden bij het verwijderen van de data.');
+                } finally {
+                    hideLoading();
+                }
+            }
+        }
+
+        window.viewBookingDetails = function(bookingId) {
+            const booking = allBookings.find(b => b.id === bookingId);
+            if (booking) {
+                alert(`Afspraak Details:\n\nNaam: ${booking.name}\nEmail: ${booking.email}\nTelefoon: ${booking.phone || 'Niet opgegeven'}\nDatum: ${formatDate(booking.date)}\nTijd: ${booking.time}\nType: ${getBookingTypeText(booking.type)}\nNotities: ${booking.notes || 'Geen notities'}`);
             }
         }
 
         window.viewMessageDetails = function(messageId) {
             const message = allMessages.find(m => m.id === messageId);
-            if (!message) return;
-            
-            const modalContent = document.getElementById('booking-modal-content');
-            
-            if (message.type === 'contact') {
-                modalContent.innerHTML = `
-                    <div class="space-y-6">
-                        <div>
-                            <h4 class="font-semibold text-gray-900 mb-3">Contact Bericht</h4>
-                            <div class="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <p><span class="font-medium">Van:</span> ${message.name}</p>
-                                    <p><span class="font-medium">Email:</span> ${message.email}</p>
-                                    <p><span class="font-medium">Onderwerp:</span> ${message.subject}</p>
-                                </div>
-                                <div>
-                                    <p><span class="font-medium">Ontvangen:</span> ${new Date(message.created).toLocaleString('nl-NL')}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h4 class="font-semibold text-gray-900 mb-3">Bericht</h4>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <p class="text-gray-700 whitespace-pre-wrap">${message.message}</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (message.type === 'cancellation') {
-                const booking = message.originalBooking;
-                modalContent.innerHTML = `
-                    <div class="space-y-6">
-                        <div>
-                            <h4 class="font-semibold text-red-800 mb-3">Afspraak Annulering</h4>
-                            <div class="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <h5 class="font-medium text-gray-900 mb-2">Geannuleerde Afspraak:</h5>
-                                    <p><span class="font-medium">Datum:</span> ${formatDate(booking.date)}</p>
-                                    <p><span class="font-medium">Tijd:</span> ${booking.time}</p>
-                                    <p><span class="font-medium">Type:</span> ${booking.type}</p>
-                                </div>
-                                <div>
-                                    <h5 class="font-medium text-gray-900 mb-2">Klant:</h5>
-                                    <p><span class="font-medium">Naam:</span> ${booking.name}</p>
-                                    <p><span class="font-medium">Email:</span> ${booking.email}</p>
-                                    <p><span class="font-medium">Geannuleerd op:</span> ${new Date(message.cancelledAt).toLocaleString('nl-NL')}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        ${message.reason ? `
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-3">Reden voor Annulering</h4>
-                                <div class="bg-red-50 p-4 rounded-lg">
-                                    <p class="text-gray-700 whitespace-pre-wrap">${message.reason}</p>
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
+            if (message) {
+                if (message.type === 'contact') {
+                    alert(`Bericht Details:\n\nVan: ${message.name}\nEmail: ${message.email}\nOnderwerp: ${message.subject}\nBericht: ${message.message}\nDatum: ${new Date(message.created).toLocaleString('nl-NL')}`);
+                } else {
+                    alert(`Annulering Details:\n\nOriginele afspraak: ${message.originalBooking?.name || 'Onbekend'}\nReden: ${message.reason || 'Geen reden opgegeven'}\nDatum: ${new Date(message.cancelledAt).toLocaleString('nl-NL')}`);
+                }
             }
-            
-            document.getElementById('booking-modal').classList.remove('hidden');
+        }
+
+        window.deleteBooking = async function(bookingId) {
+            if (confirm('Weet je zeker dat je deze afspraak wilt verwijderen?')) {
+                try {
+                    showLoading();
+                    const bookingRef = window.firebaseRef(db, `bookings/${bookingId}`);
+                    await window.firebaseRemove(bookingRef);
+                    
+                    allBookings = allBookings.filter(b => b.id !== bookingId);
+                    filterBookings();
+                    updateStats();
+                } catch (error) {
+                    console.error('Error deleting booking:', error);
+                    alert('Er is een fout opgetreden bij het verwijderen van de afspraak.');
+                } finally {
+                    hideLoading();
+                }
+            }
         }
 
         window.deleteMessage = async function(messageId) {
-            if (!confirm('Weet u zeker dat u dit bericht wilt verwijderen?')) {
-                return;
-            }
-            
-            const success = await deleteMessageFromFirebase(messageId);
-            
-            if (success) {
-                allMessages = allMessages.filter(m => m.id !== messageId);
-                filteredMessages = filteredMessages.filter(m => m.id !== messageId);
-                updateStats();
-                renderMessagesTable();
-            } else {
-                alert('Fout bij het verwijderen van het bericht. Probeer het opnieuw.');
-            }
-        }
-
-        window.refreshDashboard = function() {
-            loadDashboard();
-            // Reset filters
-            document.getElementById('status-filter').value = 'all';
-            document.getElementById('type-filter').value = 'all';
-            document.getElementById('message-type-filter').value = 'all';
-            document.getElementById('search-input').value = '';
-        }
-
-
-        window.resetAllBookings = async function() {
-            if (!confirm('Weet u zeker dat u ALLE afspraken en berichten wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
-                return;
-            }
-            
-            if (!confirm('Dit zal alle afspraken, berichten en tijdslots permanent verwijderen. Doorgaan?')) {
-                return;
-            }
-            
-            try {
-                showLoading();
-                
-                // Delete all bookings
-                for (const booking of allBookings) {
-                    const bookingRef = ref(db, `bookings/${booking.id}`);
-                    await remove(bookingRef);
+            if (confirm('Weet je zeker dat je dit bericht wilt verwijderen?')) {
+                try {
+                    showLoading();
+                    const messageRef = window.firebaseRef(db, `messages/${messageId}`);
+                    await window.firebaseRemove(messageRef);
+                    
+                    allMessages = allMessages.filter(m => m.id !== messageId);
+                    renderMessagesTable();
+                    updateStats();
+                } catch (error) {
+                    console.error('Error deleting message:', error);
+                    alert('Er is een fout opgetreden bij het verwijderen van het bericht.');
+                } finally {
+                    hideLoading();
                 }
-                
-                // Delete all messages
-                for (const message of allMessages) {
-                    const messageRef = ref(db, `messages/${message.id}`);
-                    await remove(messageRef);
-                }
-                
-                // Reset arrays
-                allBookings = [];
-                filteredBookings = [];
-                allMessages = [];
-                filteredMessages = [];
-                
-                // Refresh dashboard
-                updateStats();
-                renderBookingsTable();
-                renderMessagesTable();
-                
-                alert('Alle gegevens zijn verwijderd.');
-            } catch (error) {
-                console.error("[v0] Error resetting data:", error);
-                alert('Fout bij het verwijderen van gegevens. Probeer het opnieuw.');
-            } finally {
-                hideLoading();
             }
         }
-
-        // Close modal when clicking outside
-        document.getElementById('booking-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeBookingModal();
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("[v0] DOM loaded, starting admin panel initialization...");
-            
-            if (window.firebaseInitialized) {
-                // Firebase already ready
-                initializeAdminPanel();
-            } else {
-                // Wait for Firebase
-                window.addEventListener('firebaseReady', () => {
-                    console.log("[v0] Received firebaseReady event");
-                    initializeAdminPanel();
-                });
-                
-                // Fallback - try after 2 seconds
-                setTimeout(() => {
-                    console.log("[v0] Fallback initialization after timeout");
-                    initializeAdminPanel();
-                }, 2000);
-            }
-        });
     </script>
 </body>
 </html>

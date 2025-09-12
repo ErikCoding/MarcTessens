@@ -348,8 +348,9 @@ async function generateCalendar() {
     dayElement.textContent = date.getDate()
 
     const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset time to avoid timezone issues
     const isCurrentMonth = date.getMonth() === month
-    const isPastDate = date < today.setHours(0, 0, 0, 0)
+    const isPastDate = date < today
     const isWeekend = date.getDay() === 0 || date.getDay() === 6
 
     if (!isCurrentMonth) {
@@ -401,8 +402,11 @@ function showTimeSlots(date) {
   timeSlotsContainer.classList.remove("hidden")
   timeSlotsGrid.innerHTML = ""
 
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-  const dateKey = localDate.toISOString().split("T")[0]
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  const dateKey = `${year}-${month}-${day}`
+
   const bookedTimes = bookedSlots[dateKey] || []
 
   timeSlots.forEach((time) => {
@@ -509,8 +513,10 @@ async function submitBooking(event) {
 
     console.log("[v0] Dane formularza:", { name, email, phone, type, notes })
 
-    const localDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000)
-    const dateString = localDate.toISOString().split("T")[0]
+    const year = selectedDate.getFullYear()
+    const month = String(selectedDate.getMonth() + 1).padStart(2, "0")
+    const day = String(selectedDate.getDate()).padStart(2, "0")
+    const dateString = `${year}-${month}-${day}`
 
     // Create booking object
     const booking = {
