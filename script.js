@@ -401,7 +401,8 @@ function showTimeSlots(date) {
   timeSlotsContainer.classList.remove("hidden")
   timeSlotsGrid.innerHTML = ""
 
-  const dateKey = date.toISOString().split("T")[0]
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  const dateKey = localDate.toISOString().split("T")[0]
   const bookedTimes = bookedSlots[dateKey] || []
 
   timeSlots.forEach((time) => {
@@ -508,9 +509,12 @@ async function submitBooking(event) {
 
     console.log("[v0] Dane formularza:", { name, email, phone, type, notes })
 
+    const localDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000)
+    const dateString = localDate.toISOString().split("T")[0]
+
     // Create booking object
     const booking = {
-      date: selectedDate.toISOString().split("T")[0],
+      date: dateString,
       time: selectedTime,
       name: name,
       email: email,

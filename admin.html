@@ -60,7 +60,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, get, onValue, off } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         
         // Your web app's Firebase configuration
         // UWAGA: Zastąp te wartości swoimi danymi z Firebase Console
@@ -146,12 +146,35 @@ window.hideLoading = function() {
                         <span class="ml-4 text-gray-500">Marc Tessens</span>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <!-- Added notification bell with badge -->
+                        <div class="relative">
+                            <button onclick="toggleNotifications()" class="text-gray-500 hover:text-green-800 relative">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span id="notification-badge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                            </button>
+                            
+                            <!-- Notification dropdown -->
+                            <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                                <div class="p-4 border-b border-gray-200">
+                                    <div class="flex justify-between items-center">
+                                        <h3 class="font-semibold text-gray-900">Meldingen</h3>
+                                        <button onclick="markAllNotificationsRead()" class="text-sm text-green-600 hover:text-green-800">
+                                            Alles markeren als gelezen
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="notification-list" class="max-h-96 overflow-y-auto">
+                                    <div class="p-4 text-center text-gray-500">
+                                        Geen nieuwe meldingen
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <button onclick="refreshDashboard()" class="text-gray-500 hover:text-green-800">
                             <i class="fas fa-sync-alt"></i>
                         </button>
-                        <button onclick="exportBookings()" class="bg-green-800 hover:bg-green-900 text-white px-4 py-2 rounded-lg text-sm">
-                            <i class="fas fa-download mr-2"></i>Export
-                        </button>
+                        <!-- Removed export button as requested -->
                         <button onclick="resetAllBookings()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm">
                             <i class="fas fa-trash-alt mr-2"></i>Reset
                         </button>
@@ -393,7 +416,7 @@ window.hideLoading = function() {
     </div>
 
     <script type="module">
-        import { ref, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { ref, get, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const ADMIN_PASSWORD = 'admin123';
         let isLoggedIn = false;
@@ -403,6 +426,11 @@ window.hideLoading = function() {
         let filteredMessages = [];
         let currentTab = 'bookings';
         let db = null;
+        let notifications = [];
+        let lastBookingCount = 0;
+        let lastMessageCount = 0;
+        let bookingsListener = null;
+        let messagesListener = null;
 
         function initializeFirebase() {
             if (window.firebaseDb) {
@@ -427,7 +455,149 @@ window.hideLoading = function() {
             }
             console.log("[v0] Firebase ready, loading data...");
             await loadDashboard();
+            initializeNotifications();
         }
+
+        function initializeNotifications() {
+            // Set up real-time listeners for new bookings and messages
+            const bookingsRef = ref(db, "bookings");
+            const messagesRef = ref(db, "messages");
+            
+            bookingsListener = onValue(bookingsRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const bookings = Object.keys(snapshot.val()).length;
+                    if (lastBookingCount > 0 && bookings > lastBookingCount) {
+                        addNotification('booking', `Nieuwe afspraak ontvangen!`, 'fas fa-calendar-plus', 'bg-green-100 text-green-800');
+                    }
+                    lastBookingCount = bookings;
+                }
+            });
+            
+            messagesListener = onValue(messagesRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const messages = Object.keys(snapshot.val()).length;
+                    if (lastMessageCount > 0 && messages > lastMessageCount) {
+                        addNotification('message', `Nieuw bericht ontvangen!`, 'fas fa-envelope', 'bg-blue-100 text-blue-800');
+                    }
+                    lastMessageCount = messages;
+                }
+            });
+        }
+
+        function addNotification(type, message, icon, colorClass) {
+            const notification = {
+                id: Date.now(),
+                type: type,
+                message: message,
+                icon: icon,
+                colorClass: colorClass,
+                timestamp: new Date(),
+                read: false
+            };
+            
+            notifications.unshift(notification);
+            updateNotificationBadge();
+            renderNotifications();
+            
+            // Show browser notification if permission granted
+            if (Notification.permission === 'granted') {
+                new Notification('Marc Tessens Admin', {
+                    body: message,
+                    icon: '/favicon.ico'
+                });
+            }
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notification-badge');
+            const unreadCount = notifications.filter(n => !n.read).length;
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function renderNotifications() {
+            const notificationList = document.getElementById('notification-list');
+            
+            if (notifications.length === 0) {
+                notificationList.innerHTML = `
+                    <div class="p-4 text-center text-gray-500">
+                        Geen nieuwe meldingen
+                    </div>
+                `;
+                return;
+            }
+            
+            notificationList.innerHTML = notifications.slice(0, 10).map(notification => `
+                <div class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${notification.read ? 'opacity-60' : ''}" 
+                     onclick="markNotificationRead('${notification.id}')">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-full ${notification.colorClass} flex items-center justify-center">
+                                <i class="${notification.icon} text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900">${notification.message}</p>
+                            <p class="text-xs text-gray-500">${formatNotificationTime(notification.timestamp)}</p>
+                        </div>
+                        ${!notification.read ? '<div class="w-2 h-2 bg-blue-500 rounded-full"></div>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatNotificationTime(timestamp) {
+            const now = new Date();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return 'Nu';
+            if (minutes < 60) return `${minutes} min geleden`;
+            if (hours < 24) return `${hours} uur geleden`;
+            return `${days} dagen geleden`;
+        }
+
+        window.toggleNotifications = function() {
+            const dropdown = document.getElementById('notification-dropdown');
+            dropdown.classList.toggle('hidden');
+            
+            // Request notification permission if not granted
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        window.markNotificationRead = function(notificationId) {
+            const notification = notifications.find(n => n.id == notificationId);
+            if (notification) {
+                notification.read = true;
+                updateNotificationBadge();
+                renderNotifications();
+            }
+        }
+
+        window.markAllNotificationsRead = function() {
+            notifications.forEach(n => n.read = true);
+            updateNotificationBadge();
+            renderNotifications();
+        }
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('notification-dropdown');
+            const button = event.target.closest('[onclick="toggleNotifications()"]');
+            
+            if (!button && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
 
         async function loadBookingsFromFirebase() {
             try {
@@ -496,7 +666,8 @@ window.hideLoading = function() {
         async function deleteBookingFromFirebase(bookingId) {
             try {
                 showLoading();
-                await deleteDoc(doc(db, "bookings", bookingId));
+                const bookingRef = ref(db, `bookings/${bookingId}`);
+                await remove(bookingRef);
                 return true;
             } catch (error) {
                 console.error("[v0] Error deleting booking:", error);
@@ -509,7 +680,8 @@ window.hideLoading = function() {
         async function deleteMessageFromFirebase(messageId) {
             try {
                 showLoading();
-                await deleteDoc(doc(db, "messages", messageId));
+                const messageRef = ref(db, `messages/${messageId}`);
+                await remove(messageRef);
                 return true;
             } catch (error) {
                 console.error("[v0] Error deleting message:", error);
@@ -536,6 +708,13 @@ window.hideLoading = function() {
 
         window.adminLogout = function() {
             isLoggedIn = false;
+            if (bookingsListener) {
+                off(ref(db, "bookings"), 'value', bookingsListener);
+            }
+            if (messagesListener) {
+                off(ref(db, "messages"), 'value', messagesListener);
+            }
+            
             document.getElementById('admin-dashboard').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('admin-password').value = '';
@@ -562,32 +741,24 @@ window.hideLoading = function() {
             allMessages = await loadMessagesFromFirebase();
             filteredMessages = [...allMessages];
             
+            lastBookingCount = allBookings.length;
+            lastMessageCount = allMessages.length;
+            
             updateStats();
             renderBookingsTable();
             renderMessagesTable();
         }
 
-        window.updateStats = function() {
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-            const totalBookings = allBookings.length;
-            const upcomingBookings = allBookings.filter(booking => {
-                const bookingDate = new Date(booking.date + 'T' + booking.time);
-                return bookingDate > now;
-            }).length;
-            
-            const todayBookings = allBookings.filter(booking => {
-                const bookingDate = new Date(booking.date);
-                return bookingDate.toDateString() === today.toDateString();
-            }).length;
-            
-            const totalMessages = allMessages.length;
-
-            document.getElementById('total-bookings').textContent = totalBookings;
-            document.getElementById('upcoming-bookings').textContent = upcomingBookings;
-            document.getElementById('today-bookings').textContent = todayBookings;
-            document.getElementById('total-messages').textContent = totalMessages;
+        window.formatDate = function(dateString) {
+            const date = new Date(dateString + 'T00:00:00');
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                timeZone: 'Europe/Brussels'
+            };
+            return date.toLocaleDateString('nl-NL', options);
         }
 
         window.renderBookingsTable = function() {
@@ -612,8 +783,9 @@ window.hideLoading = function() {
             tbody.innerHTML = sortedBookings.map(booking => {
                 const bookingDateTime = new Date(booking.date + 'T' + booking.time);
                 const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const bookingDate = new Date(booking.date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const bookingDate = new Date(booking.date + 'T00:00:00');
                 
                 let statusClass = 'status-past';
                 let statusText = 'Verleden';
@@ -677,17 +849,6 @@ window.hideLoading = function() {
             }).join('');
         }
 
-        window.formatDate = function(dateString) {
-            const date = new Date(dateString);
-            const options = { 
-                weekday: 'short', 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            };
-            return date.toLocaleDateString('nl-NL', options);
-        }
-
         window.filterBookings = function() {
             const statusFilter = document.getElementById('status-filter').value;
             const typeFilter = document.getElementById('type-filter').value;
@@ -697,8 +858,9 @@ window.hideLoading = function() {
                 // Status filter
                 const bookingDateTime = new Date(booking.date + 'T' + booking.time);
                 const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const bookingDate = new Date(booking.date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const bookingDate = new Date(booking.date + 'T00:00:00');
                 
                 let matchesStatus = true;
                 if (statusFilter === 'upcoming') {
@@ -792,7 +954,9 @@ window.hideLoading = function() {
             if (success) {
                 // Remove from local arrays
                 allBookings = allBookings.filter(b => b.id !== bookingId);
-                loadDashboard();
+                filteredBookings = filteredBookings.filter(b => b.id !== bookingId);
+                updateStats();
+                renderBookingsTable();
             } else {
                 alert('Fout bij het verwijderen van de afspraak. Probeer het opnieuw.');
             }
@@ -826,6 +990,30 @@ window.hideLoading = function() {
                 document.getElementById('bookings-type-filter').classList.add('hidden');
                 document.getElementById('messages-filters').classList.remove('hidden');
             }
+        }
+
+        window.updateStats = function() {
+            const now = new Date();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const totalBookings = allBookings.length;
+            const upcomingBookings = allBookings.filter(booking => {
+                const bookingDate = new Date(booking.date + 'T' + booking.time);
+                return bookingDate > now;
+            }).length;
+            
+            const todayBookings = allBookings.filter(booking => {
+                const bookingDate = new Date(booking.date + 'T00:00:00');
+                return bookingDate.toDateString() === today.toDateString();
+            }).length;
+            
+            const totalMessages = allMessages.length;
+
+            document.getElementById('total-bookings').textContent = totalBookings;
+            document.getElementById('upcoming-bookings').textContent = upcomingBookings;
+            document.getElementById('today-bookings').textContent = todayBookings;
+            document.getElementById('total-messages').textContent = totalMessages;
         }
 
         window.renderMessagesTable = function() {
@@ -1030,7 +1218,9 @@ window.hideLoading = function() {
             
             if (success) {
                 allMessages = allMessages.filter(m => m.id !== messageId);
-                loadDashboard();
+                filteredMessages = filteredMessages.filter(m => m.id !== messageId);
+                updateStats();
+                renderMessagesTable();
             } else {
                 alert('Fout bij het verwijderen van het bericht. Probeer het opnieuw.');
             }
@@ -1045,36 +1235,6 @@ window.hideLoading = function() {
             document.getElementById('search-input').value = '';
         }
 
-        window.exportBookings = function() {
-            if (allBookings.length === 0) {
-                alert('Geen afspraken om te exporteren.');
-                return;
-            }
-            
-            const csvContent = [
-                ['Datum', 'Tijd', 'Naam', 'Email', 'Telefoon', 'Type', 'Notities', 'Geboekt op'].join(','),
-                ...allBookings.map(booking => [
-                    booking.date,
-                    booking.time,
-                    `"${booking.name}"`,
-                    booking.email,
-                    booking.phone || '',
-                    booking.type,
-                    `"${booking.notes || ''}"`,
-                    new Date(booking.created).toLocaleString('nl-NL')
-                ].join(','))
-            ].join('\n');
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `afspraken_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
 
         window.resetAllBookings = async function() {
             if (!confirm('Weet u zeker dat u ALLE afspraken en berichten wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
@@ -1090,12 +1250,14 @@ window.hideLoading = function() {
                 
                 // Delete all bookings
                 for (const booking of allBookings) {
-                    await deleteDoc(doc(db, "bookings", booking.id));
+                    const bookingRef = ref(db, `bookings/${booking.id}`);
+                    await remove(bookingRef);
                 }
                 
                 // Delete all messages
                 for (const message of allMessages) {
-                    await deleteDoc(doc(db, "messages", message.id));
+                    const messageRef = ref(db, `messages/${message.id}`);
+                    await remove(messageRef);
                 }
                 
                 // Reset arrays
@@ -1105,7 +1267,9 @@ window.hideLoading = function() {
                 filteredMessages = [];
                 
                 // Refresh dashboard
-                loadDashboard();
+                updateStats();
+                renderBookingsTable();
+                renderMessagesTable();
                 
                 alert('Alle gegevens zijn verwijderd.');
             } catch (error) {
