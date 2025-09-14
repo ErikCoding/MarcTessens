@@ -144,23 +144,28 @@ let selectedDate = null
 let selectedTime = null
 let bookedSlots = {}
 
-// Available time slots (9:00-17:00, excluding lunch 12:00-13:00)
-const timeSlots = [
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "13:00",
-  "13:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-]
+// Available time slots - Monday to Thursday: 9:00-16:30, Friday: 9:00-14:30 (excluding lunch 12:00-13:00)
+const timeSlots = {
+  // Monday to Thursday
+  weekday: [
+    "09:00",
+    "09:30",
+    "10:00",
+    "10:30",
+    "11:00",
+    "11:30",
+    "13:00",
+    "13:30",
+    "14:00",
+    "14:30",
+    "15:00",
+    "15:30",
+    "16:00",
+    "16:30",
+  ],
+  // Friday only
+  friday: ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30"],
+}
 
 async function initializeApp() {
   console.log("[v0] Rozpoczynanie inicjalizacji aplikacji...")
@@ -368,16 +373,6 @@ async function generateCalendar() {
   console.log("[v0] Kalendarz wygenerowany pomyślnie")
 }
 
-function previousMonth() {
-  currentDate.setMonth(currentDate.getMonth() - 1)
-  generateCalendar()
-}
-
-function nextMonth() {
-  currentDate.setMonth(currentDate.getMonth() + 1)
-  generateCalendar()
-}
-
 function selectDate(date) {
   selectedDate = date
   selectedTime = null
@@ -409,7 +404,21 @@ function showTimeSlots(date) {
 
   const bookedTimes = bookedSlots[dateKey] || []
 
-  timeSlots.forEach((time) => {
+  const dayOfWeek = date.getDay() // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
+  let availableSlots = []
+
+  if (dayOfWeek >= 1 && dayOfWeek <= 4) {
+    // Monday to Thursday
+    availableSlots = timeSlots.weekday
+  } else if (dayOfWeek === 5) {
+    // Friday
+    availableSlots = timeSlots.friday
+  } else {
+    // Weekend - no slots available
+    availableSlots = []
+  }
+
+  availableSlots.forEach((time) => {
     const timeButton = document.createElement("button")
     timeButton.type = "button"
     timeButton.textContent = time
