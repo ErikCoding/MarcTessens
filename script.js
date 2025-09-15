@@ -1,6 +1,36 @@
 let currentLanguage = localStorage.getItem("preferred-language") || "nl"
 let db = null
 let appInitialized = false
+let allBookings = [] // Added for storing all bookings
+let filteredBookings = [] // Added for storing filtered bookings
+let bookedSlots = {} // Declare bookedSlots variable
+let blockedDates = [] // Declare blockedDates variable
+let selectedDate = null // Declare selectedDate variable
+let selectedTime = null // Declare selectedTime variable
+let selectedEndTime = null // Declare selectedEndTime variable
+const timeSlots = {
+  weekday: [
+    "09:00",
+    "09:30",
+    "10:00",
+    "10:30",
+    "11:00",
+    "11:30",
+    "12:00",
+    "12:30",
+    "13:00",
+    "13:30",
+    "14:00",
+    "14:30",
+    "15:00",
+    "15:30",
+    "16:00",
+    "16:30",
+    "17:00",
+  ],
+  friday: ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30"],
+} // Declare timeSlots variable
+const currentDate = new Date() // Declare currentDate variable
 
 function initializeFirebase() {
   console.log("[v0] Sprawdzanie inicjalizacji Firebase...")
@@ -81,7 +111,11 @@ async function getBookedSlots() {
         if (!bookedSlots[dateKey]) {
           bookedSlots[dateKey] = []
         }
-        bookedSlots[dateKey].push(booking.time)
+        bookedSlots[dateKey].push({
+          time: booking.time,
+          endTime: booking.endTime,
+          duration: booking.duration || "30",
+        })
       })
     }
 
@@ -90,6 +124,125 @@ async function getBookedSlots() {
     console.error("[v0] Błąd pobierania zajętych terminów: ", error)
     return {}
   }
+}
+
+async function getBlockedDates() {
+  try {
+    const blockedDatesRef = window.firebaseRef(db, "blockedDates")
+    const snapshot = await window.firebaseGet(blockedDatesRef)
+    const blockedDates = []
+
+    if (snapshot.exists()) {
+      const blocks = snapshot.val()
+      Object.keys(blocks).forEach((key) => {
+        const block = blocks[key]
+        blockedDates.push({
+          id: key,
+          startDate: block.startDate,
+          endDate: block.endDate || block.startDate,
+          startTime: block.startTime,
+          endTime: block.endTime,
+          reason: block.reason,
+        })
+      })
+    }
+
+    return blockedDates
+  } catch (error) {
+    console.error("[v0] Błąd pobierania zablokowanych dat: ", error)
+    return []
+  }
+}
+
+function isDateBlocked(date, blockedDates) {
+  const dateString =
+    date.getFullYear() +
+    "-" +
+    String(date.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(date.getDate()).padStart(2, "0")
+
+  return blockedDates.some((block) => {
+    const blockStart = new Date(block.startDate)
+    const blockEnd = new Date(block.endDate)
+    const checkDate = new Date(dateString)
+
+    return checkDate >= blockStart && checkDate <= blockEnd
+  })
+}
+
+function isTimeSlotBlocked(date, time, blockedDates) {
+  const dateString =
+    date.getFullYear() +
+    "-" +
+    String(date.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(date.getDate()).padStart(2, "0")
+
+  return blockedDates.some((block) => {
+    const blockStart = new Date(block.startDate)
+    const blockEnd = new Date(block.endDate)
+    const checkDate = new Date(dateString)
+
+    // Check if date is in blocked range
+    if (checkDate >= blockStart && checkDate <= blockEnd) {
+      // If no specific time blocking, block entire day
+      if (!block.startTime && !block.endTime) {
+        return true
+      }
+
+      // Check if time is in blocked time range
+      if (block.startTime && block.endTime) {
+        const timeMinutes = timeToMinutes(time)
+        const blockStartMinutes = timeToMinutes(block.startTime)
+        const blockEndMinutes = timeToMinutes(block.endTime)
+
+        return timeMinutes >= blockStartMinutes && timeMinutes < blockEndMinutes
+      }
+
+      // If only start time is specified, block from that time onwards
+      if (block.startTime && !block.endTime) {
+        const timeMinutes = timeToMinutes(time)
+        const blockStartMinutes = timeToMinutes(block.startTime)
+        return timeMinutes >= blockStartMinutes
+      }
+    }
+
+    return false
+  })
+}
+
+function timeToMinutes(timeString) {
+  const [hours, minutes] = timeString.split(":").map(Number)
+  return hours * 60 + minutes
+}
+
+function isTimeSlotOverlapping(date, startTime, endTime, bookedSlots) {
+  const dateKey =
+    date.getFullYear() +
+    "-" +
+    String(date.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(date.getDate()).padStart(2, "0")
+
+  const dayBookings = bookedSlots[dateKey] || []
+
+  const newStartMinutes = timeToMinutes(startTime)
+  const newEndMinutes = timeToMinutes(endTime)
+
+  return dayBookings.some((booking) => {
+    const bookingStartMinutes = timeToMinutes(booking.time)
+    let bookingEndMinutes
+
+    if (booking.endTime) {
+      bookingEndMinutes = timeToMinutes(booking.endTime)
+    } else {
+      bookingEndMinutes = bookingStartMinutes + Number.parseInt(booking.duration || "30")
+    }
+
+    // Check for overlap
+    return newStartMinutes < bookingEndMinutes && newEndMinutes > bookingStartMinutes
+  })
 }
 
 async function cancelBookingByEmail(email, reason) {
@@ -139,32 +292,46 @@ async function cancelBookingByEmail(email, reason) {
   }
 }
 
-const currentDate = new Date()
-let selectedDate = null
-let selectedTime = null
-let bookedSlots = {}
+async function getAllBookings() {
+  try {
+    const bookingsRef = window.firebaseRef(db, "bookings")
+    const snapshot = await window.firebaseGet(bookingsRef)
+    allBookings = snapshot.exists() ? Object.values(snapshot.val()) : []
+    return allBookings
+  } catch (error) {
+    console.error("[v0] Błąd pobierania wszystkich rezerwacji: ", error)
+    return []
+  }
+}
 
-// Available time slots - Monday to Thursday: 9:00-16:30, Friday: 9:00-14:30 (excluding lunch 12:00-13:00)
-const timeSlots = {
-  // Monday to Thursday
-  weekday: [
-    "09:00",
-    "09:30",
-    "10:00",
-    "10:30",
-    "11:00",
-    "11:30",
-    "13:00",
-    "13:30",
-    "14:00",
-    "14:30",
-    "15:00",
-    "15:30",
-    "16:00",
-    "16:30",
-  ],
-  // Friday only
-  friday: ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30"],
+function filterBookings(query) {
+  filteredBookings = allBookings.filter((booking) => {
+    return (
+      booking.name.toLowerCase().includes(query.toLowerCase()) ||
+      booking.email.toLowerCase().includes(query.toLowerCase()) ||
+      booking.phone.toLowerCase().includes(query.toLowerCase())
+    )
+  })
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString)
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }
+  return date.toLocaleDateString(currentLanguage === "nl" ? "nl-NL" : "en-US", options)
+}
+
+function getBookingTypeText(type) {
+  const bookingTypes = {
+    consultation: currentLanguage === "nl" ? "Consultatie" : "Consultation",
+    meeting: currentLanguage === "nl" ? "Meeting" : "Meeting",
+    other: currentLanguage === "nl" ? "Inne" : "Other",
+  }
+  return bookingTypes[type] || type
 }
 
 async function initializeApp() {
@@ -230,11 +397,11 @@ function switchLanguage(lang) {
   // Update language buttons
   document.getElementById("lang-nl").className =
     lang === "nl"
-      ? "px-3 py-1 bg-green-700 text-white rounded-md text-sm font-medium"
+      ? "px-3 py-1 bg-blue-700 text-white rounded-md text-sm font-medium"
       : "px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm font-medium"
   document.getElementById("lang-en").className =
     lang === "en"
-      ? "px-3 py-1 bg-green-700 text-white rounded-md text-sm font-medium"
+      ? "px-3 py-1 bg-blue-700 text-white rounded-md text-sm font-medium"
       : "px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm font-medium"
 
   // Update page title
@@ -272,6 +439,33 @@ function toggleMobileMenu() {
   menu.classList.toggle("hidden")
 }
 
+function previousMonth() {
+  const today = new Date()
+  const currentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+  const previousMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+
+  // Don't allow going to previous months (past dates)
+  if (previousMonthDate < new Date(today.getFullYear(), today.getMonth(), 1)) {
+    return
+  }
+
+  currentDate.setMonth(currentDate.getMonth() - 1)
+  generateCalendar()
+}
+
+function nextMonth() {
+  const today = new Date()
+  const nextMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+  const maxAllowedDate = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+
+  if (nextMonthDate > maxAllowedDate) {
+    return
+  }
+
+  currentDate.setMonth(currentDate.getMonth() + 1)
+  generateCalendar()
+}
+
 async function generateCalendar() {
   console.log("[v0] Generowanie kalendarza...")
 
@@ -287,14 +481,18 @@ async function generateCalendar() {
   try {
     if (db) {
       bookedSlots = await getBookedSlots()
+      blockedDates = await getBlockedDates() // Load blocked dates
       console.log("[v0] Załadowano zajęte terminy:", bookedSlots)
+      console.log("[v0] Załadowano zablokowane daty:", blockedDates)
     } else {
       console.log("[v0] Firebase nie gotowy, używam pustych terminów")
       bookedSlots = {}
+      blockedDates = []
     }
   } catch (error) {
     console.error("[v0] Błąd ładowania zajętych terminów:", error)
     bookedSlots = {}
+    blockedDates = []
   }
 
   const year = currentDate.getFullYear()
@@ -357,13 +555,19 @@ async function generateCalendar() {
     const isCurrentMonth = date.getMonth() === month
     const isPastDate = date < today
     const isWeekend = date.getDay() === 0 || date.getDay() === 6
+    const isBlocked = isDateBlocked(date, blockedDates) // Check if date is blocked
 
     if (!isCurrentMonth) {
       dayElement.className += " text-gray-300"
-    } else if (isPastDate || isWeekend) {
-      dayElement.className += " text-gray-400 cursor-not-allowed"
+    } else if (isPastDate || isWeekend || isBlocked) {
+      if (isBlocked) {
+        dayElement.className += " text-red-400 cursor-not-allowed bg-red-50" // Special styling for blocked dates
+        dayElement.title = "Deze datum is niet beschikbaar"
+      } else {
+        dayElement.className += " text-gray-400 cursor-not-allowed"
+      }
     } else {
-      dayElement.className += " text-gray-700 hover:bg-green-100"
+      dayElement.className += " text-gray-700 hover:bg-blue-100"
       dayElement.onclick = () => selectDate(date)
     }
 
@@ -376,12 +580,13 @@ async function generateCalendar() {
 function selectDate(date) {
   selectedDate = date
   selectedTime = null
+  selectedEndTime = null // Reset end time
 
   // Update selected date styling
   document.querySelectorAll("#calendar-days > div").forEach((day) => {
-    day.classList.remove("bg-green-700", "text-white")
+    day.classList.remove("bg-blue-700", "text-white")
     if (day.textContent == date.getDate() && !day.classList.contains("text-gray-300")) {
-      day.classList.add("bg-green-700", "text-white")
+      day.classList.add("bg-blue-700", "text-white")
     }
   })
 
@@ -402,7 +607,7 @@ function showTimeSlots(date) {
   const day = String(date.getDate()).padStart(2, "0")
   const dateKey = `${year}-${month}-${day}`
 
-  const bookedTimes = bookedSlots[dateKey] || []
+  const dayBookings = bookedSlots[dateKey] || []
 
   const dayOfWeek = date.getDay() // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
   let availableSlots = []
@@ -418,17 +623,41 @@ function showTimeSlots(date) {
     availableSlots = []
   }
 
+  if (availableSlots.length > 0) {
+    availableSlots = availableSlots.slice(0, -1)
+  }
+
   availableSlots.forEach((time) => {
     const timeButton = document.createElement("button")
     timeButton.type = "button"
     timeButton.textContent = time
     timeButton.className = "p-3 border border-gray-300 rounded-lg text-center transition-colors"
 
-    if (bookedTimes.includes(time)) {
+    // Check if this time slot would overlap with any existing bookings
+    // considering the selected duration
+    const duration = getSelectedDuration()
+    const proposedEndTime = calculateEndTime(time, duration)
+
+    const isOverlapping = isTimeSlotOverlapping(date, time, proposedEndTime, bookedSlots)
+    const isTimeBlocked = isTimeSlotBlocked(date, time, blockedDates)
+
+    // Also check if the proposed end time goes beyond office hours
+    const endMinutes = timeToMinutes(proposedEndTime)
+    const maxEndTime = dayOfWeek === 5 ? timeToMinutes("14:30") : timeToMinutes("17:00") // Friday vs other days
+    const isBeyondOfficeHours = endMinutes > maxEndTime
+
+    if (isOverlapping || isTimeBlocked || isBeyondOfficeHours) {
       timeButton.className += " bg-gray-200 text-gray-500 cursor-not-allowed"
       timeButton.disabled = true
+      if (isTimeBlocked) {
+        timeButton.title = "Deze tijd is geblokkeerd"
+      } else if (isBeyondOfficeHours) {
+        timeButton.title = "Afspraak zou buiten kantooruren eindigen"
+      } else {
+        timeButton.title = "Deze tijd overlapt met een bestaande afspraak"
+      }
     } else {
-      timeButton.className += " hover:bg-green-100 hover:border-green-300"
+      timeButton.className += " hover:bg-blue-100 hover:border-blue-300"
       timeButton.onclick = () => selectTime(time, timeButton)
     }
 
@@ -438,15 +667,16 @@ function showTimeSlots(date) {
 
 function selectTime(time, buttonElement) {
   selectedTime = time
+  selectedEndTime = null // Reset end time for now
 
   // Update selected time styling
   document.querySelectorAll("#time-slots-grid button").forEach((btn) => {
-    btn.classList.remove("bg-green-700", "text-white")
-    btn.classList.add("hover:bg-green-100", "hover:border-green-300")
+    btn.classList.remove("bg-blue-700", "text-white")
+    btn.classList.add("hover:bg-blue-100", "hover:border-blue-300")
   })
 
-  buttonElement.classList.remove("hover:bg-green-100", "hover:border-green-300")
-  buttonElement.classList.add("bg-green-700", "text-white")
+  buttonElement.classList.remove("hover:bg-blue-100", "hover:border-blue-300")
+  buttonElement.classList.add("bg-blue-700", "text-white")
 
   updateBookingSummary()
   updateBookingButton()
@@ -456,6 +686,7 @@ function updateBookingSummary() {
   if (selectedDate && selectedTime) {
     const summary = document.getElementById("booking-summary")
     const datetime = document.getElementById("booking-datetime")
+    const durationDisplay = document.getElementById("booking-duration-display")
 
     const options = {
       weekday: "long",
@@ -465,7 +696,20 @@ function updateBookingSummary() {
     }
 
     const formattedDate = selectedDate.toLocaleDateString(currentLanguage === "nl" ? "nl-NL" : "en-US", options)
-    datetime.textContent = `${formattedDate} om ${selectedTime}`
+
+    // Get selected duration
+    const duration = getSelectedDuration()
+    const endTime = calculateEndTime(selectedTime, duration)
+
+    // Update selected end time for validation
+    selectedEndTime = endTime
+
+    const timeDisplay = `${selectedTime} - ${endTime}`
+    datetime.textContent = `${formattedDate} om ${timeDisplay}`
+
+    // Display duration
+    const durationText = currentLanguage === "nl" ? `Duur: ${duration} minuten` : `Duration: ${duration} minutes`
+    durationDisplay.textContent = durationText
 
     summary.classList.remove("hidden")
   }
@@ -479,7 +723,7 @@ function updateBookingButton() {
   if (selectedDate && selectedTime) {
     submitButton.disabled = false
     submitButton.className =
-      "w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer"
+      "w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer"
     submitButton.textContent = currentLanguage === "nl" ? "Afspraak Bevestigen" : "Confirm Appointment"
   } else {
     submitButton.disabled = true
@@ -505,6 +749,22 @@ async function submitBooking(event) {
     return
   }
 
+  // Validate custom duration if selected
+  const durationSelect = document.getElementById("booking-duration")
+  const customDuration = document.getElementById("custom-duration")
+
+  if (durationSelect.value === "custom") {
+    const customValue = Number.parseInt(customDuration.value)
+    if (!customValue || customValue < 15 || customValue > 480) {
+      alert(
+        currentLanguage === "nl"
+          ? "Voer een geldige duur in tussen 15 en 480 minuten."
+          : "Please enter a valid duration between 15 and 480 minutes.",
+      )
+      return
+    }
+  }
+
   // Add loading animation
   const submitButton = document.getElementById("booking-submit")
   const originalText = submitButton.textContent
@@ -527,10 +787,31 @@ async function submitBooking(event) {
     const day = String(selectedDate.getDate()).padStart(2, "0")
     const dateString = `${year}-${month}-${day}`
 
+    // Get selected duration and calculate end time
+    const duration = getSelectedDuration()
+    const calculatedEndTime = calculateEndTime(selectedTime, duration)
+
+    // Final validation - check for overlaps with the exact duration
+    const wouldOverlap = isTimeSlotOverlapping(selectedDate, selectedTime, calculatedEndTime, bookedSlots)
+    if (wouldOverlap) {
+      alert(
+        currentLanguage === "nl"
+          ? "Deze afspraak zou overlappen met een bestaande reservering. Kies een andere tijd."
+          : "This appointment would overlap with an existing booking. Please choose a different time.",
+      )
+
+      // Remove loading animation
+      submitButton.classList.remove("loading")
+      submitButton.textContent = originalText
+      return
+    }
+
     // Create booking object
     const booking = {
       date: dateString,
       time: selectedTime,
+      endTime: calculatedEndTime,
+      duration: duration.toString(),
       name: name,
       email: email,
       phone: phone,
@@ -570,7 +851,10 @@ async function submitBooking(event) {
     // Reset form and selections
     selectedDate = null
     selectedTime = null
+    selectedEndTime = null
     document.getElementById("time-slots").classList.add("hidden")
+    document.getElementById("booking-form").reset()
+    document.getElementById("custom-duration-container").classList.add("hidden")
     await generateCalendar()
 
     // Scroll to success message
@@ -693,6 +977,41 @@ async function cancelAppointment(event) {
   }
 }
 
+function updateDurationSelection() {
+  const durationSelect = document.getElementById("booking-duration")
+  const customContainer = document.getElementById("custom-duration-container")
+
+  if (durationSelect.value === "custom") {
+    customContainer.classList.remove("hidden")
+  } else {
+    customContainer.classList.add("hidden")
+  }
+
+  // Update booking summary if date and time are selected
+  if (selectedDate && selectedTime) {
+    updateBookingSummary()
+  }
+}
+
+function getSelectedDuration() {
+  const durationSelect = document.getElementById("booking-duration")
+  const customDuration = document.getElementById("custom-duration")
+
+  if (durationSelect.value === "custom") {
+    return Number.parseInt(customDuration.value) || 30
+  } else {
+    return Number.parseInt(durationSelect.value)
+  }
+}
+
+function calculateEndTime(startTime, durationMinutes) {
+  const startMinutes = timeToMinutes(startTime)
+  const endMinutes = startMinutes + durationMinutes
+  const endHours = Math.floor(endMinutes / 60)
+  const endMins = endMinutes % 60
+  return `${String(endHours).padStart(2, "0")}:${String(endMins).padStart(2, "0")}`
+}
+
 const observerOptions = {
   threshold: 0.1,
   rootMargin: "0px 0px -50px 0px",
@@ -728,3 +1047,142 @@ document.addEventListener("DOMContentLoaded", () => {
     sectionElements.forEach((el) => sectionObserver.observe(el))
   }, 1000)
 })
+
+window.updateDurationSelection = updateDurationSelection
+
+function addNotification(type, message, iconClass, bgColorClass, playSound) {
+  // Implementation for adding notifications
+  console.log(`Notification added: ${message}`)
+  if (playSound) {
+    // Play sound logic here
+    console.log("Playing sound for notification")
+  }
+}
+
+// Assuming there's a function to handle messages and notifications
+async function handleMessage(message) {
+  if (message.type === "cancellation") {
+    addNotification(
+      "cancellation",
+      `Afspraak geannuleerd: ${message.originalBooking?.name || "Onbekend"}`,
+      "fas fa-calendar-times",
+      "bg-red-100 text-red-800",
+      true,
+    ) // Play sound for cancellations
+  }
+  // Handle other message types here
+}
+
+// Example usage of handleMessage
+document.addEventListener("DOMContentLoaded", async () => {
+  const messagesRef = window.firebaseRef(db, "messages")
+  const snapshot = await window.firebaseGet(messagesRef)
+  if (snapshot.exists()) {
+    const messages = snapshot.val()
+    Object.keys(messages).forEach((key) => {
+      handleMessage(messages[key])
+    })
+  }
+})
+
+function renderBookingsTable() {
+  const tbody = document.getElementById("bookings-table-body")
+  const noBookings = document.getElementById("no-bookings")
+
+  if (!tbody) return // Function only exists in admin panel
+
+  if (filteredBookings.length === 0) {
+    tbody.innerHTML = ""
+    if (noBookings) noBookings.classList.remove("hidden")
+    return
+  }
+
+  if (noBookings) noBookings.classList.add("hidden")
+
+  // Sort bookings by date and time
+  const sortedBookings = [...filteredBookings].sort((a, b) => {
+    const dateTimeA = new Date(a.date + "T" + a.time)
+    const dateTimeB = new Date(b.date + "T" + b.time)
+    return dateTimeA - dateTimeB
+  })
+
+  tbody.innerHTML = sortedBookings
+    .map((booking) => {
+      const bookingDateTime = new Date(booking.date + "T" + booking.time)
+      const now = new Date()
+      const isPast = bookingDateTime < now
+      const statusClass = isPast ? "bg-gray-100 text-gray-800" : "bg-green-100 text-green-800"
+      const statusText = isPast ? "Voltooid" : "Gepland"
+
+      return `
+      <tr class="hover:bg-gray-50 ${isPast ? "opacity-75" : ""}">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-900">${formatDate(booking.date)}</div>
+          <div class="text-sm text-gray-500">${booking.time}${booking.endTime ? " - " + booking.endTime : ""}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-900">${booking.name}</div>
+          ${booking.isManual ? '<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Handmatig</span>' : ""}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          ${getBookingTypeText(booking.type)}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-900">${booking.email}</div>
+          ${booking.phone ? `<div class="text-sm text-gray-500">${booking.phone}</div>` : ""}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+            ${statusText}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <button onclick="viewBookingDetails('${booking.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button onclick="deleteBooking('${booking.id}')" class="text-red-600 hover:text-red-900">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `
+    })
+    .join("")
+}
+
+function viewBookingDetails(bookingId) {
+  const booking = allBookings.find((b) => b.id === bookingId)
+  if (booking) {
+    const details = `
+Afspraak Details:
+
+Naam: ${booking.name}
+Email: ${booking.email}
+${booking.phone ? `Telefoon: ${booking.phone}` : ""}
+Type: ${getBookingTypeText(booking.type)}
+Datum: ${formatDate(booking.date)}
+Tijd: ${booking.time}${booking.endTime ? " - " + booking.endTime : ""}
+${booking.notes ? `Notities: ${booking.notes}` : ""}
+${booking.isManual ? "Handmatig toegevoegd" : "Online geboekt"}
+Aangemaakt: ${new Date(booking.created).toLocaleString("nl-NL")}
+    `
+    alert(details)
+  }
+}
+
+// Added missing deleteBooking function
+async function deleteBooking(bookingId) {
+  try {
+    showLoading()
+    const bookingToDeleteRef = window.firebaseRef(db, `bookings/${bookingId}`)
+    await window.firebaseRemove(bookingToDeleteRef)
+    console.log("[v0] Rezerwacja usunięta z ID: ", bookingId)
+    await getAllBookings()
+    renderBookingsTable()
+  } catch (error) {
+    console.error("[v0] Błąd usuwania rezerwacji: ", error)
+    alert("Wystąpił błąd podczas usuwania rezerwacji. Spróbuj ponownie.")
+  } finally {
+    hideLoading()
+  }
+}

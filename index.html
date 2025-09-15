@@ -44,7 +44,7 @@
       "name": "Marc Tessens Boekhouding",
       "description": "Professionele boekhouding en fiscaal advies met 30 jaar ervaring. Gespecialiseerd in startersadvies, loonbeheer en transportvergunningen.",
       "url": "https://marctessens.be",
-      "telephone": "+32-3-XXX-XX-XX",
+      "telephone": "+3214480155",
       "email": "info@marctessens.be",
       "address": {
         "@type": "PostalAddress",
@@ -58,7 +58,7 @@
         "latitude": "51.1833",
         "longitude": "5.1167"
       },
-      "openingHours": "Mo-Fr 09:00-17:00",
+      "openingHours": ["Mo-Th 09:00-16:30", "Fr 09:00-14:30"],
       "priceRange": "€€",
       "serviceArea": {
         "@type": "GeoCircle",
@@ -205,13 +205,15 @@
     <nav class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-sm z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <div class="font-playfair font-bold text-xl text-green-800">Marc Tessens</div>
+                <!-- Changed brand color to dark blue -->
+                <div class="font-playfair font-bold text-xl text-blue-800">Marc Tessens</div>
                 <div class="hidden md:flex space-x-8">
-                    <a href="#home" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Home" data-en="Home">Home</a>
-                    <a href="#about" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Over Ons" data-en="About">Over Ons</a>
-                    <a href="#services" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Diensten" data-en="Services">Diensten</a>
-                    <a href="#booking" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Afspraak" data-en="Appointment">Afspraak</a>
-                    <a href="#contact" class="text-gray-700 hover:text-green-800 transition-colors" data-nl="Contact" data-en="Contact">Contact</a>
+                    <!-- Changed navigation hover colors to blue -->
+                    <a href="#home" class="text-gray-700 hover:text-blue-800 transition-colors" data-nl="Home" data-en="Home">Home</a>
+                    <a href="#about" class="text-gray-700 hover:text-blue-800 transition-colors" data-nl="Over Ons" data-en="About">Over Ons</a>
+                    <a href="#services" class="text-gray-700 hover:text-blue-800 transition-colors" data-nl="Diensten" data-en="Services">Diensten</a>
+                    <a href="#booking" class="text-gray-700 hover:text-blue-800 transition-colors" data-nl="Afspraak" data-en="Appointment">Afspraak</a>
+                    <a href="#contact" class="text-gray-700 hover:text-blue-800 transition-colors" data-nl="Contact" data-en="Contact">Contact</a>
                 </div>
                 <button class="md:hidden" onclick="toggleMobileMenu()">
                     <i class="fas fa-bars text-gray-700"></i>
@@ -236,25 +238,27 @@
                 <h1 class="font-playfair text-5xl md:text-7xl font-bold mb-6 animate-bounce-in" data-nl="Boekhouding-Fiscaal Accountant Marc Tessens" data-en="Accounting & Tax Consultant Marc Tessens">
                     Boekhouding-Fiscaal Accountant Marc Tessens
                 </h1>
-                <p class="text-xl md:text-2xl mb-8 font-light animate-slide-up" data-nl="30 jaar ervaring in kwalitatief startersadvies en boekhouding" data-en="30 years of experience in quality startup advice and accounting">
-                    30 jaar ervaring in kwalitatief startersadvies en boekhouding
+                <p class="text-xl md:text-2xl mb-8 font-light animate-slide-up" data-nl="35 jaar ervaring in kwalitatief startersadvies en boekhouding" data-en="35 years of experience in quality startup advice and accounting">
+                    35 jaar ervaring in kwalitatief startersadvies en boekhouding
                 </p>
                 <div class="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center animate-scale-in">
-                    <a href="#booking" class="btn-primary inline-block bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors" data-nl="Gratis Consultatie" data-en="Free Consultation">
+                    <!-- Changed button colors to blue theme -->
+                    <a href="#booking" class="btn-primary inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors" data-nl="Gratis Consultatie" data-en="Free Consultation">
                         Gratis Consultatie
                     </a>
-                    <a href="#services" class="btn-primary inline-block border-2 border-white hover:bg-white hover:text-green-800 font-semibold px-8 py-3 rounded-lg transition-colors" data-nl="Onze Diensten" data-en="Our Services">
+                    <a href="#services" class="btn-primary inline-block border-2 border-white hover:bg-white hover:text-blue-800 font-semibold px-8 py-3 rounded-lg transition-colors" data-nl="Onze Diensten" data-en="Our Services">
                         Onze Diensten
                     </a>
                 </div>
             </div>
         </section>
 
-        <section id="about" class="py-20 bg-green-50 section-reveal">
+        <section id="about" class="py-20 bg-blue-50 section-reveal">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div class="animate-slide-in-left">
-                        <h2 class="font-playfair text-4xl font-bold text-green-800 mb-6" data-nl="Private Consulting Office biedt kwalitatief startersadvies" data-en="Private Consulting Office offers quality startup advice">
+                        <!-- Changed heading color to blue -->
+                        <h2 class="font-playfair text-4xl font-bold text-blue-800 mb-6" data-nl="Private Consulting Office biedt kwalitatief startersadvies" data-en="Private Consulting Office offers quality startup advice">
                             Private Consulting Office biedt kwalitatief startersadvies
                         </h2>
                         <div class="space-y-4 text-lg leading-relaxed">
@@ -270,7 +274,7 @@
                     </div>
                 </div>
                 <div class="animate-slide-in-right">
-                    <img src="https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Marc Tessens kantoor - professionele boekhouding en fiscaal advies in Mol" class="rounded-lg shadow-lg w-full" >
+                    <img src="working-room.JPG" alt="Marc Tessens kantoor - professionele boekhouding en fiscaal advies in Mol" class="rounded-lg shadow-lg w-full" >
                 </div>
             </div>
         </section>
@@ -278,17 +282,19 @@
         <section id="services" class="py-20 bg-white section-reveal">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <header class="text-center mb-16 animate-slide-up">
-                    <h2 class="font-playfair text-4xl font-bold text-green-800 mb-4" data-nl="Een greep uit mijn aanbod" data-en="A selection from my services">
+                    <!-- Changed services heading color to blue -->
+                    <h2 class="font-playfair text-4xl font-bold text-blue-800 mb-4" data-nl="Een greep uit mijn aanbod" data-en="A selection from my services">
                         Een greep uit mijn aanbod
                     </h2>
-                    <p class="text-xl text-gray-600 max-w-3xl mx-auto" data-nl="Met 30 jaar ervaring bied ik kwalitatieve begeleiding op het gebied van boekhouding, accountancy en fiscaliteit." data-en="With 30 years of experience, I offer quality guidance in the field of accounting, accountancy and taxation.">
-                        Met 30 jaar ervaring bied ik kwalitatieve begeleiding op het gebied van boekhouding, accountancy en fiscaliteit.
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto" data-nl="Met 35 jaar ervaring bied ik kwalitatieve begeleiding op het gebied van boekhouding, accountancy en fiscaliteit." data-en="With 35 years of experience, I offer quality guidance in the field of accounting, accountancy and taxation.">
+                        Met 35 jaar ervaring bied ik kwalitatieve begeleiding op het gebied van boekhouding, accountancy en fiscaliteit.
                     </p>
                 </header>
                 
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <article class="service-card bg-green-50 p-8 rounded-lg">
-                        <div class="text-green-800 text-4xl mb-4">
+                    <!-- Changed service cards background and icon colors to blue theme -->
+                    <article class="service-card bg-blue-50 p-8 rounded-lg">
+                        <div class="text-blue-800 text-4xl mb-4">
                             <i class="fas fa-calculator"></i>
                         </div>
                         <h3 class="font-playfair text-xl font-bold mb-4" data-nl="Loonbeheer" data-en="Payroll Management">Loonbeheer</h3>
@@ -297,8 +303,8 @@
                         </p>
                     </article>
                     
-                    <article class="service-card bg-green-50 p-8 rounded-lg">
-                        <div class="text-green-800 text-4xl mb-4">
+                    <article class="service-card bg-blue-50 p-8 rounded-lg">
+                        <div class="text-blue-800 text-4xl mb-4">
                             <i class="fas fa-truck"></i>
                         </div>
                         <h3 class="font-playfair text-xl font-bold mb-4" data-nl="Transportvergunningen" data-en="Transport Permits">Transportvergunningen</h3>
@@ -307,8 +313,8 @@
                         </p>
                     </article>
                     
-                    <article class="service-card bg-green-50 p-8 rounded-lg">
-                        <div class="text-green-800 text-4xl mb-4">
+                    <article class="service-card bg-blue-50 p-8 rounded-lg">
+                        <div class="text-blue-800 text-4xl mb-4">
                             <i class="fas fa-gas-pump"></i>
                         </div>
                         <h3 class="font-playfair text-xl font-bold mb-4" data-nl="Accijnzen Terugvraag" data-en="Excise Tax Refund">Accijnzen Terugvraag</h3>
@@ -317,8 +323,8 @@
                         </p>
                     </article>
                     
-                    <article class="service-card bg-green-50 p-8 rounded-lg">
-                        <div class="text-green-800 text-4xl mb-4">
+                    <article class="service-card bg-blue-50 p-8 rounded-lg">
+                        <div class="text-blue-800 text-4xl mb-4">
                             <i class="fas fa-hand-holding-usd"></i>
                         </div>
                         <h3 class="font-playfair text-xl font-bold mb-4" data-nl="Steunmaatregelen" data-en="Support Measures">Steunmaatregelen</h3>
@@ -327,8 +333,8 @@
                         </p>
                     </article>
                     
-                    <article class="service-card bg-green-50 p-8 rounded-lg">
-                        <div class="text-green-800 text-4xl mb-4">
+                    <article class="service-card bg-blue-50 p-8 rounded-lg">
+                        <div class="text-blue-800 text-4xl mb-4">
                             <i class="fas fa-search"></i>
                         </div>
                         <h3 class="font-playfair text-xl font-bold mb-4" data-nl="Controlerende Functie" data-en="Audit & Review">Controlerende Functie</h3>
@@ -337,8 +343,8 @@
                         </p>
                     </article>
                     
-                    <article class="service-card bg-green-50 p-8 rounded-lg">
-                        <div class="text-green-800 text-4xl mb-4">
+                    <article class="service-card bg-blue-50 p-8 rounded-lg">
+                        <div class="text-blue-800 text-4xl mb-4">
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <h3 class="font-playfair text-xl font-bold mb-4" data-nl="Fiscaal Advies" data-en="Tax Advice">Fiscaal Advies</h3>
@@ -350,7 +356,7 @@
             </div>
         </section>
 
-        <section class="py-20 bg-green-800 text-white section-reveal">
+        <section class="py-20 bg-blue-800 text-white section-reveal">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <h2 class="font-playfair text-4xl font-bold mb-8 animate-slide-up" data-nl="Private Consulting Office is dé partner voor al uw boekhouding" data-en="Private Consulting Office is the partner for all your accounting">
                     Private Consulting Office is dé partner voor al uw boekhouding
@@ -368,25 +374,27 @@
                 </div>
                 <div class="mt-12 grid md:grid-cols-3 gap-8">
                     <div class="text-center animate-bounce-in">
-                        <div class="text-4xl font-bold text-green-400 mb-2 stat-number">30+</div>
+                        <!-- Changed statistics accent color to light blue -->
+                        <div class="text-4xl font-bold text-blue-400 mb-2 stat-number">35+</div>
                         <div data-nl="Jaar Ervaring" data-en="Years Experience">Jaar Ervaring</div>
                     </div>
                     <div class="text-center animate-bounce-in" style="animation-delay: 0.2s;">
-                        <div class="text-4xl font-bold text-green-400 mb-2 stat-number">100%</div>
+                        <div class="text-4xl font-bold text-blue-400 mb-2 stat-number">100%</div>
                         <div data-nl="Persoonlijke Behandeling" data-en="Personal Treatment">Persoonlijke Behandeling</div>
                     </div>
                     <div class="text-center animate-bounce-in" style="animation-delay: 0.4s;">
-                        <div class="text-4xl font-bold text-green-400 mb-2 stat-number" data-nl="Gratis" data-en="Free">Gratis</div>
+                        <div class="text-4xl font-bold text-blue-400 mb-2 stat-number" data-nl="Gratis" data-en="Free">Gratis</div>
                         <div data-nl="Eerste Advies" data-en="First Consultation">Eerste Advies</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="booking" class="py-20 bg-green-50">
+        <section id="booking" class="py-20 bg-blue-50">
             <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <header class="text-center mb-12">
-                    <h2 class="font-playfair text-4xl font-bold text-green-800 mb-8" data-nl="Boek uw gratis consultatie" data-en="Book your free consultation">
+                    <!-- Changed booking section heading color to blue -->
+                    <h2 class="font-playfair text-4xl font-bold text-blue-800 mb-8" data-nl="Boek uw gratis consultatie" data-en="Book your free consultation">
                         Boek uw gratis consultatie
                     </h2>
                     <p class="text-xl text-gray-600 mb-8" data-nl="Een eerste advies is steeds gratis! Kies een geschikt moment voor uw persoonlijke consultatie." data-en="A first consultation is always free! Choose a suitable time for your personal consultation.">
@@ -396,16 +404,18 @@
                 
                 <div class="grid lg:grid-cols-2 gap-12">
                     <div class="bg-white p-8 rounded-lg shadow-lg">
-                        <h3 class="font-playfair text-2xl font-bold text-green-800 mb-6" data-nl="Selecteer een datum" data-en="Select a date">
+                        <!-- Changed calendar heading color to blue -->
+                        <h3 class="font-playfair text-2xl font-bold text-blue-800 mb-6" data-nl="Selecteer een datum" data-en="Select a date">
                             Selecteer een datum
                         </h3>
                         
                         <div class="flex justify-between items-center mb-6">
-                            <button onclick="previousMonth()" class="p-2 text-green-800 hover:bg-green-100 rounded-lg">
+                            <!-- Changed calendar navigation button colors to blue -->
+                            <button onclick="previousMonth()" class="p-2 text-blue-800 hover:bg-blue-100 rounded-lg">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
                             <h4 id="calendar-month-year" class="font-semibold text-lg"></h4>
-                            <button onclick="nextMonth()" class="p-2 text-green-800 hover:bg-green-100 rounded-lg">
+                            <button onclick="nextMonth()" class="p-2 text-blue-800 hover:bg-blue-100 rounded-lg">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
@@ -430,7 +440,8 @@
                     </div>
                     
                     <div class="bg-white p-8 rounded-lg shadow-lg">
-                        <h3 class="font-playfair text-2xl font-bold text-green-800 mb-6" data-nl="Uw gegevens" data-en="Your details">
+                        <!-- Changed form heading color to blue -->
+                        <h3 class="font-playfair text-2xl font-bold text-blue-800 mb-6" data-nl="Uw gegevens" data-en="Your details">
                             Uw gegevens
                         </h3>
                         
@@ -439,28 +450,28 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2" data-nl="Volledige naam *" data-en="Full name *">
                                     Volledige naam *
                                 </label>
-                                <input type="text" id="booking-name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" data-nl-placeholder="Uw volledige naam" data-en-placeholder="Your full name">
+                                <input type="text" id="booking-name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-nl-placeholder="Uw volledige naam" data-en-placeholder="Your full name">
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2" data-nl="E-mailadres *" data-en="Email address *">
                                     E-mailadres *
                                 </label>
-                                <input type="email" id="booking-email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" data-nl-placeholder="uw.email@voorbeeld.be" data-en-placeholder="your.email@example.com">
+                                <input type="email" id="booking-email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-nl-placeholder="uw.email@voorbeeld.be" data-en-placeholder="your.email@example.com">
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2" data-nl="Telefoonnummer" data-en="Phone number">
                                     Telefoonnummer
                                 </label>
-                                <input type="tel" id="booking-phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" data-nl-placeholder="+32 XXX XX XX XX" data-en-placeholder="+32 XXX XX XX XX">
+                                <input type="tel" id="booking-phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-nl-placeholder="+32 XXX XX XX XX" data-en-placeholder="+32 XXX XX XX XX">
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2" data-nl="Type consultatie *" data-en="Type of consultation *">
                                     Type consultatie *
                                 </label>
-                                <select id="booking-type" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <select id="booking-type" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     <option value="" data-nl="Selecteer een optie" data-en="Select an option">Selecteer een optie</option>
                                     <option value="startup" data-nl="Startersadvies" data-en="Startup advice">Startersadvies</option>
                                     <option value="bookkeeping" data-nl="Boekhouding" data-en="Bookkeeping">Boekhouding</option>
@@ -470,18 +481,45 @@
                                 </select>
                             </div>
                             
+                            <!-- Added duration selection for clients -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-nl="Duur van de afspraak" data-en="Appointment duration">
+                                    Duur van de afspraak
+                                </label>
+                                <select id="booking-duration" onchange="updateDurationSelection()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="30" data-nl="30 minuten (standaard)" data-en="30 minutes (standard)">30 minuten (standaard)</option>
+                                    <option value="45" data-nl="45 minuten" data-en="45 minutes">45 minuten</option>
+                                    <option value="60" data-nl="1 uur" data-en="1 hour">1 uur</option>
+                                    <option value="90" data-nl="1,5 uur" data-en="1.5 hours">1,5 uur</option>
+                                    <option value="120" data-nl="2 uur" data-en="2 hours">2 uur</option>
+                                    <option value="custom" data-nl="Aangepaste duur" data-en="Custom duration">Aangepaste duur</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Added custom duration input -->
+                            <div id="custom-duration-container" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-nl="Aangepaste duur (minuten)" data-en="Custom duration (minutes)">
+                                    Aangepaste duur (minuten)
+                                </label>
+                                <input type="number" id="custom-duration" min="15" max="480" step="15" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="60">
+                                <p class="text-xs text-gray-500 mt-1" data-nl="Minimaal 15 minuten, maximaal 8 uur" data-en="Minimum 15 minutes, maximum 8 hours">Minimaal 15 minuten, maximaal 8 uur</p>
+                            </div>
+                            
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2" data-nl="Aanvullende informatie" data-en="Additional information">
                                     Aanvullende informatie
                                 </label>
-                                <textarea id="booking-notes" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" data-nl-placeholder="Vertel ons meer over uw situatie..." data-en-placeholder="Tell us more about your situation..."></textarea>
+                                <textarea id="booking-notes" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-nl-placeholder="Vertel ons meer over uw situatie..." data-en-placeholder="Tell us more about your situation..."></textarea>
                             </div>
                             
-                            <div id="booking-summary" class="hidden bg-green-50 p-4 rounded-lg">
-                                <h4 class="font-semibold text-green-800 mb-2" data-nl="Geselecteerde afspraak:" data-en="Selected appointment:">
+                            <div id="booking-summary" class="hidden bg-blue-50 p-4 rounded-lg">
+                                <!-- Changed booking summary heading color to blue -->
+                                <h4 class="font-semibold text-blue-800 mb-2" data-nl="Geselecteerde afspraak:" data-en="Selected appointment:">
                                     Geselecteerde afspraak:
                                 </h4>
                                 <p id="booking-datetime" class="text-gray-700"></p>
+                                <!-- Added duration display in summary -->
+                                <p id="booking-duration-display" class="text-gray-600 text-sm mt-1"></p>
                             </div>
                             
                             <button type="submit" id="booking-submit" disabled class="w-full bg-gray-400 text-white font-semibold py-3 rounded-lg cursor-not-allowed" data-nl="Selecteer eerst een datum en tijd" data-en="Please select a date and time first">
@@ -552,7 +590,8 @@
         <section id="contact" class="py-20 bg-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <header class="text-center mb-16">
-                    <h2 class="font-playfair text-4xl font-bold text-green-800 mb-4" data-nl="Kom eens langs voor een eerste kennismaking!" data-en="Come visit us for an initial introduction!">
+                    <!-- Changed contact section heading color to blue -->
+                    <h2 class="font-playfair text-4xl font-bold text-blue-800 mb-4" data-nl="Kom eens langs voor een eerste kennismaking!" data-en="Come visit us for an initial introduction!">
                         Kom eens langs voor een eerste kennismaking!
                     </h2>
                     <p class="text-xl text-gray-600" data-nl="Heeft u behoefte aan een ervaren fiscaal accountant? Contacteer mij dan voor meer informatie." data-en="Do you need an experienced tax accountant? Contact me for more information.">
@@ -562,10 +601,12 @@
                 
                 <div class="grid lg:grid-cols-3 gap-12">
                     <div class="lg:col-span-1">
-                        <h3 class="font-playfair text-2xl font-bold text-green-800 mb-6" data-nl="Contactgegevens" data-en="Contact Information">Contactgegevens</h3>
+                        <!-- Changed contact info heading color to blue -->
+                        <h3 class="font-playfair text-2xl font-bold text-blue-800 mb-6" data-nl="Contactgegevens" data-en="Contact Information">Contactgegevens</h3>
                         <address class="space-y-6 not-italic">
                             <div class="flex items-start">
-                                <i class="fas fa-map-marker-alt text-green-800 w-6 mt-1"></i>
+                                <!-- Changed contact icons color to blue -->
+                                <i class="fas fa-map-marker-alt text-blue-800 w-6 mt-1"></i>
                                 <div class="ml-3">
                                     <p class="font-semibold text-gray-900" data-nl="Kantooradres" data-en="Office Address">Kantooradres</p>
                                     <p class="text-gray-600">
@@ -576,21 +617,21 @@
                                 </div>
                             </div>
                             <div class="flex items-start">
-                                <i class="fas fa-phone text-green-800 w-6 mt-1"></i>
+                                <i class="fas fa-phone text-blue-800 w-6 mt-1"></i>
                                 <div class="ml-3">
                                     <p class="font-semibold text-gray-900" data-nl="Telefoon" data-en="Phone">Telefoon</p>
                                     <p class="text-gray-600">+32 14 48 01 55</p>
                                 </div>
                             </div>
                             <div class="flex items-start">
-                                <i class="fas fa-envelope text-green-800 w-6 mt-1"></i>
+                                <i class="fas fa-envelope text-blue-800 w-6 mt-1"></i>
                                 <div class="ml-3">
                                     <p class="font-semibold text-gray-900" data-nl="E-mail" data-en="Email">E-mail</p>
-                                    <p class="text-gray-600">info@marctessens.be</p>
+                                    <p class="text-gray-600">info@pcobvba.be</p>
                                 </div>
                             </div>
                             <div class="flex items-start">
-                                <i class="fas fa-clock text-green-800 w-6 mt-1"></i>
+                                <i class="fas fa-clock text-blue-800 w-6 mt-1"></i>
                                 <div class="ml-3">
                                     <p class="font-semibold text-gray-900" data-nl="Openingstijden" data-en="Opening Hours">Openingstijden</p>
                                     <div class="text-gray-600">
@@ -602,9 +643,10 @@
                             </div>
                             
                             <div class="pt-4">
-                                <a href="https://www.google.com/maps/dir//Ezaart+28,+2400+Mol,+België" 
+                                <!-- Updated Google Maps link to the provided office location -->
+                                <a href="https://www.google.com/maps/place/Private+Consulting+Office+B.V.+Bvba/@51.1799677,5.0985263,575m/data=!3m2!1e3!4b1!4m6!3m5!1s0x47c1358c3905e8d3:0x8e7b9c4ead3cb9be!8m2!3d51.1799644!4d5.1011012!16s%2Fg%2F11cs2wzp03?entry=ttu&g_ep=EgoyMDI1MDkxMC4wIKXMDSoASAFQAw%3D%3D" 
                                    target="_blank" 
-                                   class="inline-flex items-center px-4 py-2 bg-green-800 hover:bg-green-900 text-white rounded-lg transition-colors">
+                                   class="inline-flex items-center px-4 py-2 bg-blue-800 hover:bg-blue-900 text-white rounded-lg transition-colors">
                                     <i class="fas fa-directions mr-2"></i>
                                     <span data-nl="Routebeschrijving" data-en="Get Directions">Routebeschrijving</span>
                                 </a>
@@ -622,38 +664,42 @@
                     </div>
                     
                     <div class="lg:col-span-2">
-                        <h3 class="font-playfair text-2xl font-bold text-green-800 mb-6" data-nl="Locatie" data-en="Location">Locatie</h3>
+                        <!-- Changed location heading color to blue -->
+                        <h3 class="font-playfair text-2xl font-bold text-blue-800 mb-6" data-nl="Locatie" data-en="Location">Locatie</h3>
                         <div class="bg-gray-100 rounded-lg overflow-hidden shadow-lg h-96 mb-8">
+                            <!-- Updated iframe src to show the correct office location -->
                             <iframe 
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2508.123456789!2d5.1167!3d51.1833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c6e123456789a%3A0x123456789abcdef0!2sEzaart%2028%2C%202400%20Mol%2C%20Belgium!5e0!3m2!1sen!2sbe!4v1234567890123!5m2!1sen!2sbe"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2508.123456789!2d5.1011012!3d51.1799644!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c1358c3905e8d3%3A0x8e7b9c4ead3cb9be!2sPrivate%20Consulting%20Office%20B.V.%20Bvba!5e0!3m2!1sen!2sbe!4v1234567890123!5m2!1sen!2sbe"
                                 width="100%" 
                                 height="100%" 
                                 style="border:0;" 
                                 allowfullscreen="" 
                                 loading="lazy" 
                                 referrerpolicy="no-referrer-when-downgrade"
-                                title="Marc Tessens Office Location">
+                                title="Private Consulting Office B.V. Bvba Location">
                             </iframe>
                         </div>
                         
                         <div>
-                            <h3 class="font-playfair text-2xl font-bold text-green-800 mb-6" data-nl="Stuur een bericht" data-en="Send a message">Stuur een bericht</h3>
+                            <!-- Changed message form heading color to blue -->
+                            <h3 class="font-playfair text-2xl font-bold text-blue-800 mb-6" data-nl="Stuur een bericht" data-en="Send a message">Stuur een bericht</h3>
                             <form class="space-y-4" onsubmit="handleContactForm(event)">
                                 <div class="grid md:grid-cols-2 gap-4">
                                     <div>
-                                        <input type="text" id="contact-name" placeholder="Naam" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" data-nl-placeholder="Naam" data-en-placeholder="Name" required>
+                                        <input type="text" id="contact-name" placeholder="Naam" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-nl-placeholder="Naam" data-en-placeholder="Name" required>
                                     </div>
                                     <div>
-                                        <input type="email" id="contact-email" placeholder="E-mail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" data-nl-placeholder="E-mail" data-en-placeholder="Email" required>
+                                        <input type="email" id="contact-email" placeholder="E-mail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-nl-placeholder="E-mail" data-en-placeholder="Email" required>
                                     </div>
                                 </div>
                                 <div>
-                                    <input type="text" id="contact-subject" placeholder="Onderwerp" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" data-nl-placeholder="Onderwerp" data-en-placeholder="Subject" required>
+                                    <input type="text" id="contact-subject" placeholder="Onderwerp" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-nl-placeholder="Onderwerp" data-en-placeholder="Subject" required>
                                 </div>
                                 <div>
-                                    <textarea rows="4" id="contact-message" placeholder="Bericht" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" data-nl-placeholder="Bericht" data-en-placeholder="Message" required></textarea>
+                                    <textarea rows="4" id="contact-message" placeholder="Bericht" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-nl-placeholder="Bericht" data-en-placeholder="Message" required></textarea>
                                 </div>
-                                <button type="submit" class="w-full bg-green-800 hover:bg-green-900 text-white font-semibold py-3 rounded-lg transition-colors" data-nl="Verstuur Bericht" data-en="Send Message">
+                                <!-- Changed contact form submit button color to blue -->
+                                <button type="submit" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-lg transition-colors" data-nl="Verstuur Bericht" data-en="Send Message">
                                     Verstuur Bericht
                                 </button>
                             </form>
@@ -672,15 +718,17 @@
                     </div>
                 </div>
                 
-                <div class="mt-16 bg-green-50 rounded-lg p-8">
+                <div class="mt-16 bg-blue-50 rounded-lg p-8">
                     <div class="text-center">
-                        <h3 class="font-playfair text-2xl font-bold text-green-800 mb-4" data-nl="Gemakkelijk bereikbaar" data-en="Easily accessible">
+                        <!-- Changed accessibility section heading color to blue -->
+                        <h3 class="font-playfair text-2xl font-bold text-blue-800 mb-4" data-nl="Gemakkelijk bereikbaar" data-en="Easily accessible">
                             Gemakkelijk bereikbaar
                         </h3>
                         <div class="grid md:grid-cols-3 gap-8 mt-8">
                             <div class="text-center">
                                 <div class="bg-white p-4 rounded-lg shadow-sm mb-4 inline-block">
-                                    <i class="fas fa-car text-green-800 text-2xl"></i>
+                                    <!-- Changed accessibility icons color to blue -->
+                                    <i class="fas fa-car text-blue-800 text-2xl"></i>
                                 </div>
                                 <h4 class="font-semibold text-gray-900 mb-2" data-nl="Met de auto" data-en="By car">Met de auto</h4>
                                 <p class="text-gray-600 text-sm" data-nl="Gratis parkeren beschikbaar voor de deur" data-en="Free parking available at the door">
@@ -689,7 +737,7 @@
                             </div>
                             <div class="text-center">
                                 <div class="bg-white p-4 rounded-lg shadow-sm mb-4 inline-block">
-                                    <i class="fas fa-bus text-green-800 text-2xl"></i>
+                                    <i class="fas fa-bus text-blue-800 text-2xl"></i>
                                 </div>
                                 <h4 class="font-semibold text-gray-900 mb-2" data-nl="Openbaar vervoer" data-en="Public transport">Openbaar vervoer</h4>
                                 <p class="text-gray-600 text-sm" data-nl="Bushalte op 2 minuten lopen" data-en="Bus stop 2 minutes walk">
@@ -698,7 +746,7 @@
                             </div>
                             <div class="text-center">
                                 <div class="bg-white p-4 rounded-lg shadow-sm mb-4 inline-block">
-                                    <i class="fas fa-wheelchair text-green-800 text-2xl"></i>
+                                    <i class="fas fa-wheelchair text-blue-800 text-2xl"></i>
                                 </div>
                                 <h4 class="font-semibold text-gray-900 mb-2" data-nl="Toegankelijk" data-en="Accessible">Toegankelijk</h4>
                                 <p class="text-gray-600 text-sm" data-nl="Rolstoeltoegankelijk kantoor" data-en="Wheelchair accessible office">
@@ -734,13 +782,13 @@
                     <h4 class="font-semibold mb-4" data-nl="Contact" data-en="Contact">Contact</h4>
                     <div class="space-y-2 text-gray-400">
                         <p>+32 14 48 01 55</p>
-                        <p>info@marctessens.be</p>
+                        <p>info@pcobvba.be</p>
                         <p data-nl="Ma-Do: 9:00-16:30, Vr: 9:00-14:30" data-en="Mon-Thu: 9:00-16:30, Fri: 9:00-14:30">Ma-Do: 9:00-16:30, Vr: 9:00-14:30</p>
                     </div>
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; 2024 Marc Tessens. <span data-nl="Alle rechten voorbehouden." data-en="All rights reserved.">Alle rechten voorbehouden.</span></p>
+                <p>&copy; 2025 Marc Tessens. <span data-nl="Alle rechten voorbehouden." data-en="All rights reserved.">Alle rechten voorbehouden.</span></p>
                 <div class="mt-2 text-sm">
                     <p>VAT Number: BE0822746377 | ITAA Number: ITAA50.677.446</p>
                 </div>

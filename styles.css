@@ -1,12 +1,12 @@
 :root {
-  --primary: #166534;
+  --primary: #1e3a8a;
   --primary-foreground: #ffffff;
-  --secondary: #15803d;
-  --accent: #22c55e;
+  --secondary: #1e40af;
+  --accent: #3b82f6;
   --background: #ffffff;
   --foreground: #374151;
-  --card: #f0fdf4;
-  --muted: #f0fdf4;
+  --card: #eff6ff;
+  --muted: #eff6ff;
   --border: #e5e7eb;
 }
 
@@ -184,7 +184,7 @@ nav a::after {
   height: 2px;
   bottom: -4px;
   left: 50%;
-  background-color: #166534;
+  background-color: #1e3a8a;
   transition: all 0.3s ease;
 }
 
@@ -254,7 +254,7 @@ nav a:hover::after {
 
 #calendar-days > div:hover:not(.text-gray-300):not(.text-gray-400) {
   transform: scale(1.1);
-  background-color: #dcfce7;
+  background-color: #dbeafe;
 }
 
 #time-slots-grid button {
@@ -286,7 +286,7 @@ input:focus,
 textarea:focus,
 select:focus {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(22, 101, 52, 0.1);
+  box-shadow: 0 8px 16px rgba(30, 58, 138, 0.1);
 }
 
 /* Loading animation for form submission */
